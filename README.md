@@ -49,11 +49,12 @@ unter der Stimme. Ist sie losgelassen, ist der Empfänger stumm.
 
 ### Radio
 
-Fester Radioklang (kleiner Lautsprecher, etwas Sendekompression) mit leisem Grundrauschen, gelegentlichem
-Knacken und kurzem Empfangsschwund. Passt auf Musik und auf Durchsagen.
+Fester Radioklang (kleiner Lautsprecher, etwas Sendekompression) mit leisem Grundrauschen und gelegentlichem
+Knacken. Passt auf Musik und auf Durchsagen.
 
 | Regler | Wirkung |
 |---|---|
+| **Störungen** | Wie oft und wie stark der Empfang schlecht wird: Die Stimme sackt ab und geht ins Gruscheln, das Rauschen kommt hoch, dann ist sie wieder da. aus = keine Störungen, voll = häufig und stark (Standard 50 %). |
 | **Senderwechsel** | Knopf oder Automation. Jede Änderung dreht den Sender weiter: Das Signal ist etwa eine Sekunde weg, es pfeift und rauscht, dann rastet der Sender ein. |
 
 ### Telefon
@@ -102,6 +103,8 @@ gesteuert. Die Stimme ist nur bei **Gespräch** zu hören.
 Die Versionsnummer steht in der Datei `VERSION`, im Plugin-Kopf und im Namen der Release. Sie wird bei jeder
 Änderung hochgezählt.
 
+- **1.1** – Radio: neuer Regler „Störungen“ (Empfangsschwund mit Gruscheln, einstellbar); Squelch und Senderwechsel
+  nutzen jetzt eingebaute Aufnahmen aus der HörTalk-Community statt reiner Synthese.
 - **1.0** – Untertitel „Audio Drama Radio & Phone Simulator“, Versionsnummer auf 1.0 gesetzt (die 0.x-Versionen waren Testläufe).
 - **0.1.0** – Erste Testversion: Modi Funk (Walkie-Talkie, Autofunk, Tischfunk; Sprechtaste mit Automatik,
   Abhacken), Radio (Rauschen, Knacken, Schwund, Senderwechsel) und Telefon (Leitungszustände, Wählscheibe und
@@ -119,4 +122,4 @@ Die Versionsnummer steht in der Datei `VERSION`, im Plugin-Kopf und im Namen der
 
 Gebaut mit [JUCE](https://juce.com) 8. Die Sättigung (übersteuerter Funk- und Lautsprecherklang) folgt dem
 Algorithmus von **Airwindows Density** von Chris Johnson ([github.com/airwindows](https://github.com/airwindows/airwindows), MIT-Lizenz).
-Die eingebauten Geräusche werden im Plugin erzeugt, es sind keine Samples enthalten.
+Squelch und Senderwechsel nutzen Aufnahmen aus der HörTalk-Community, die dort frei nutzbar sind; die übrigen Geräusche werden im Plugin erzeugt.

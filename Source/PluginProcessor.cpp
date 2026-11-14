@@ -37,6 +37,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout RadiophoneProcessor::createL
     layout.add (std::make_unique<AudioParameterFloat> (ParameterID { "gate", 1 }, "Funk: Abhacken (Gate)",
                                                        NormalisableRange<float> (0.0f, 1.0f), 0.0f, gateText));
     layout.add (std::make_unique<AudioParameterBool> (ParameterID { "tune", 1 }, "Radio: Senderwechsel", false));
+    layout.add (std::make_unique<AudioParameterFloat> (ParameterID { "intf", 1 }, u8 ("Radio: St\xc3\xb6rungen"),
+                                                       NormalisableRange<float> (0.0f, 1.0f), 0.5f, gateText));
     layout.add (std::make_unique<AudioParameterChoice> (ParameterID { "line", 1 }, "Telefon: Leitung", lineNames(), 0));
     layout.add (std::make_unique<AudioParameterChoice> (ParameterID { "dial", 1 }, u8 ("Telefon: W\xc3\xa4hlart"), dialNames(), 0));
     layout.add (std::make_unique<AudioParameterFloat> (ParameterID { "sfx", 1 }, u8 ("Ger\xc3\xa4usche"),
@@ -59,6 +61,7 @@ RadiophoneProcessor::RadiophoneProcessor()
     pTune = apvts.getRawParameterValue ("tune");
     pLine = apvts.getRawParameterValue ("line");
     pDial = apvts.getRawParameterValue ("dial");
+    pIntf = apvts.getRawParameterValue ("intf");
     loadSamples();
 }
 
@@ -136,6 +139,7 @@ void RadiophoneProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
     p.tuneCount = pTune->load() > 0.5f ? 1 : 0;   // jede Aenderung loest einen Senderwechsel aus
     p.line = juce::roundToInt (pLine->load());
     p.dialType = juce::roundToInt (pDial->load());
+    p.interference = pIntf->load();
 
     // Funk, Radio und Telefon sind mono: Eingang zusammenmischen
     float* m = mono.data();

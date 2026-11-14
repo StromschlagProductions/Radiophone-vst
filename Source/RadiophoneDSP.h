@@ -145,6 +145,7 @@ struct Params
     int tuneCount = 0;         // Radio: jede Aenderung = ein Senderwechsel
     int line = kGespraech;     // Telefon: Zustand der Leitung
     int dialType = kScheibe;
+    float interference = 0.5f; // Radio: 0 = keine Stoerungen, 1 = haeufig und stark
 };
 
 //==============================================================================
@@ -238,6 +239,7 @@ public:
         const float gateRamp = 1.0f / (0.0012f * (float) fs);
         const int pauseSamples = (int) (p.pauseSec * fs);
         const float detOpen = dbToLin (-44.0f), detQuiet = dbToLin (-50.0f);
+        intf = std::clamp (p.interference, 0.0f, 1.0f);
 
         for (int i = 0; i < n; ++i)
         {
@@ -473,6 +475,7 @@ private:
     int crackleLeft = 0;
     float crackleAmp = 0;
     int dipLeft = 0, dipLen = 1;
+    float dipDepth = 0.55f, dipFlutter = 0.5f, intf = 0.3f;
     int tuneLeft = 0, tuneLen = 1;
     float tuneF1 = 0, tuneF2 = 0, tuneP1 = 0, tuneP2 = 0, tuneChop = 0, tuneChopRate = 10;
     Biquad tuneRes;
@@ -510,17 +513,22 @@ private:
         }
 
         // Kurzer Empfangsschwund: Stimme sackt weg, Rauschen kommt hoch
-        if (dipLeft <= 0 && tuneLeft <= 0 && rng.uni() < 0.05f / (float) fs)
+        // Haeufigkeit und Staerke folgen dem Regler "Stoerungen"; bei 0 gibt es keine
+        if (intf > 0.001f && dipLeft <= 0 && tuneLeft <= 0 && rng.uni() < (0.02f + 0.30f * intf) / (float) fs)
         {
-            dipLen = (int) ((0.3 + 0.5 * rng.uni()) * fs);
+            dipLen = (int) ((0.25 + 0.9 * rng.uni()) * fs);
             dipLeft = dipLen;
+            dipDepth = 0.35f + 0.55f * intf;
         }
         if (dipLeft > 0)
         {
             const float ph = 1.0f - (float) dipLeft / (float) dipLen;
             const float d = std::sin (kPi * ph);
-            voice *= 1.0f - 0.55f * d;
-            noiseLvl *= 1.0f + 2.5f * d;
+            // Stimme geht ins Gruscheln: sackt ab und flackert, Rauschen und Knistern kommen hoch
+            dipFlutter += 0.25f * (rng.uni() - dipFlutter);
+            voice *= std::max (0.0f, 1.0f - dipDepth * d * (0.7f + 0.6f * dipFlutter));
+            noiseLvl *= 1.0f + (2.5f + 5.0f * intf) * d;
+            if (rng.uni() < 0.02f * d) fx += (0.05f + 0.15f * intf) * rng.bi();
             --dipLeft;
         }
 

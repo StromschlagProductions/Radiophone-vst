@@ -52,7 +52,7 @@ private:
     std::atomic<float>* pKey = nullptr;  std::atomic<float>* pPause = nullptr;
     std::atomic<float>* pGate = nullptr; std::atomic<float>* pSfx = nullptr;
     std::atomic<float>* pTune = nullptr; std::atomic<float>* pLine = nullptr;
-    std::atomic<float>* pDial = nullptr;
+    std::atomic<float>* pDial = nullptr; std::atomic<float>* pIntf = nullptr;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (RadiophoneProcessor)
 };

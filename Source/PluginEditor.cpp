@@ -63,7 +63,8 @@ static juce::AttributedString buildHelp (juce::Colour text, juce::Colour accent,
     body ("Abhacken (Gate): aus = sauber. Je weiter aufgedreht, desto eher bricht die Verbindung bei leisen Stellen hart weg, wie bei schlechtem Empfang.");
 
     head ("RADIO");
-    body ("Fester Radioklang mit leisem Grundrauschen, gelegentlichem Knacken und kurzem Empfangsschwund. Gut f\xc3\xbcr Musik und Durchsagen aus einem Radio.");
+    body ("Fester Radioklang mit leisem Grundrauschen und gelegentlichem Knacken. Gut f\xc3\xbcr Musik und Durchsagen aus einem Radio.");
+    body ("St\xc3\xb6rungen: Wie oft und wie stark der Empfang schlecht wird. Die Stimme sackt ab und geht ins Gruscheln, das Rauschen kommt hoch, dann ist sie wieder da. aus = keine St\xc3\xb6rungen, voll = h\xc3\xa4ufig und stark.");
     body ("Senderwechsel: Klick auf den Knopf, oder den Parameter \xe2\x80\x9eRadio: Senderwechsel\xe2\x80\x9c automatisieren. Jede \xc3\x84nderung dreht den Sender weiter: Das Signal ist etwa eine Sekunde weg, es pfeift und rauscht, dann rastet der Sender wieder ein.");
     note ("Den Raum (Radio steht hinten rechts) macht LOCATIONS oder der Pan am Kanal.");
 
@@ -123,9 +124,10 @@ RadiophoneEditor::RadiophoneEditor (RadiophoneProcessor& p) : AudioProcessorEdit
     tuneButton.setTooltip (u8 ("Dreht den Sender weiter (ca. 1 s Pfeifen und Rauschen). Automatisierbar als \xe2\x80\x9eRadio: Senderwechsel\xe2\x80\x9c, jede \xc3\x84nderung l\xc3\xb6st einmal aus."));
     tuneButton.onClick = [this] { triggerTuning(); };
     content.addAndMakeVisible (tuneButton);
-    radioInfo.setText (u8 ("Fester Radioklang mit leisem Grundrauschen, gelegentlichem Knacken und kurzem Empfangsschwund.\n\n"
-                           "Senderwechsel: Signal ist etwa eine Sekunde weg, es pfeift und rauscht, dann rastet der Sender ein. "
-                           "Jede \xc3\x84nderung des Parameters l\xc3\xb6st einmal aus."), juce::dontSendNotification);
+    setupKnob (intf, "intf", "St\xc3\xb6rungen");
+    intf.slider.setTooltip (u8 ("Wie oft und wie stark der Empfang schlecht wird: die Stimme sackt ab und geht ins Gruscheln. aus = nie."));
+    radioInfo.setText (u8 ("Senderwechsel: Das Signal ist kurz weg, es pfeift und rauscht, dann rastet der Sender wieder ein.\n\n"
+                           "St\xc3\xb6rungen: Die Stimme sackt ab und geht ins Gruscheln, wie bei schlechtem Empfang."), juce::dontSendNotification);
     radioInfo.setJustificationType (juce::Justification::topLeft);
     content.addAndMakeVisible (radioInfo);
 
@@ -244,6 +246,8 @@ void RadiophoneEditor::updateModeVisibility()
         c->setVisible (funk);
     tuneButton.setVisible (radio);
     radioInfo.setVisible (radio);
+    intf.slider.setVisible (radio);
+    intf.label.setVisible (radio);
     for (juce::Component* c : { (juce::Component*) &lineBox, (juce::Component*) &dialBox,
                                 (juce::Component*) &lineInfo, (juce::Component*) &dialInfo })
         c->setVisible (tel);
@@ -481,8 +485,9 @@ void RadiophoneEditor::resized()
     placeKnob (pause, (int) kBx, top + 38, (int) kBw, 112);
 
     // Radio
-    tuneButton.setBounds ((int) kAx + 12, top + 4, 190, 44);
-    radioInfo.setBounds ((int) kAx + 214, top, (int) (kBx + kBw - kAx) - 226, 160);
+    tuneButton.setBounds ((int) kAx + 12, top + 4, 160, 44);
+    placeKnob (intf, (int) kAx + 190, top, 130, 112);
+    radioInfo.setBounds ((int) kAx + 332, top, (int) (kBx + kBw - kAx) - 344, 160);
 
     // Telefon
     lineBox.setBounds ((int) kAx + 12, top, (int) kAw - 24, 28);
