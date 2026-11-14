@@ -87,8 +87,9 @@ gesteuert. Die Stimme ist nur bei **Gespräch** zu hören.
 
 ## Hinweise
 
-- Das Plugin meldet 80 ms Latenz. Das ist der Vorlauf, damit das Tschk vor dem ersten Wort liegt. Studio One
-  gleicht das automatisch aus.
+- **Latenz:** Nur im Funkmodus 30 ms, Radio und Telefon haben keine. Der Vorlauf im Funkmodus ist nötig, damit das
+  Tschk vor dem ersten Wort liegt: Die Automatik erkennt Sprache 3 bis 22 ms nach dem hörbaren Anfang und braucht
+  dazu Reserve. Studio One gleicht das automatisch aus. Wechselt man den Modus, meldet das Plugin die neue Latenz.
 - Funk, Radio und Telefon sind mono: Eine Stereospur wird zusammengemischt und auf beide Seiten gelegt.
 - Die Stimme kommt etwa so laut heraus, wie sie hineingeht (ca. 1 dB leiser, durch die schmalere Bandbreite).
 
@@ -103,6 +104,7 @@ gesteuert. Die Stimme ist nur bei **Gespräch** zu hören.
 Die Versionsnummer steht in der Datei `VERSION`, im Plugin-Kopf und im Namen der Release. Sie wird bei jeder
 Änderung hochgezählt.
 
+- **1.2** – Latenz von 80 auf 30 ms gesenkt (gemessen, nicht geschätzt), im Radio- und Telefonmodus 0.
 - **1.1** – Radio: neuer Regler „Störungen“ (Empfangsschwund mit Gruscheln, einstellbar); Squelch und Senderwechsel
   nutzen jetzt eingebaute Aufnahmen aus der HörTalk-Community statt reiner Synthese.
 - **1.0** – Untertitel „Audio Drama Radio & Phone Simulator“, Versionsnummer auf 1.0 gesetzt (die 0.x-Versionen waren Testläufe).

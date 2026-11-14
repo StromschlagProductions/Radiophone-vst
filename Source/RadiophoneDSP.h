@@ -159,7 +159,10 @@ struct Samples
 class Engine
 {
 public:
-    static constexpr float kLookaheadSec = 0.08f;
+#ifndef RPH_LOOKAHEAD_SEC
+ #define RPH_LOOKAHEAD_SEC 0.03f   // gemessen: Erkennung braucht bis ca. 22 ms + 4 ms Einblendung
+#endif
+    static constexpr float kLookaheadSec = RPH_LOOKAHEAD_SEC;
     static constexpr float kSqSampleGain = 0.5f;     // Pegel der Squelch-Aufnahmen
     static constexpr float kTuneSampleGain = 0.9f;   // Pegel der Senderwechsel-Aufnahme
 
@@ -197,11 +200,16 @@ public:
         fs = sampleRate;
         lookahead = (int) std::lround (kLookaheadSec * fs);
         delay.assign ((size_t) lookahead + 1, 0.0f);
+        curLookahead = lookahead;
         configured = false;
         reset();
     }
 
-    int latencySamples() const { return lookahead; }
+    // Funk braucht den Vorlauf (Tschk vor dem ersten Wort), Radio und Telefon nicht
+    int latencySamples() const { return curLookahead; }
+    static int latencyFor (int mode, double sampleRate) { return mode == kFunk ? (int) std::lround (kLookaheadSec * sampleRate) : 0; }
+    // setzt den Modus vor dem ersten Block (fuer die gemeldete Latenz)
+    void setMode (int mode) { curLookahead = mode == kFunk ? lookahead : 0; }
     bool isTransmitting() const { return txOpen; }
     bool isTuning() const { return tuneLeft > 0; }
 
@@ -246,8 +254,9 @@ public:
             const float in = buf[i];
 
             // --- Vorlauf: x ist das Signal, das jetzt ausgegeben wird (80 ms alt)
-            const float x = delay[(size_t) dpos];
             delay[(size_t) dpos] = in;
+            int rpos = dpos - curLookahead; if (rpos < 0) rpos += (int) delay.size();
+            const float x = delay[(size_t) rpos];
             if (++dpos >= (int) delay.size()) dpos = 0;
 
             // --- Funk: Sprechtaste (Automatik sieht 80 ms in die Zukunft)
@@ -342,6 +351,8 @@ private:
             firstBlock = true;
         }
         lastMode = p.mode; lastDevice = p.device;
+        curLookahead = p.mode == kFunk ? lookahead : 0;
+        std::fill (delay.begin(), delay.end(), 0.0f);
         configured = true;
     }
 
@@ -371,7 +382,7 @@ private:
         if (p.mode == kFunk && p.key != lastKey)
         {
             if (p.key == kKeyDown && ! txOpen) { pendingClose = -1; openTx (p); }
-            else if (p.key == kKeyUp && txOpen) pendingClose = lookahead;   // erst schliessen, wenn das letzte Wort durch ist
+            else if (p.key == kKeyUp && txOpen) pendingClose = curLookahead;   // erst schliessen, wenn das letzte Wort durch ist
             else if (p.key == kKeyDown) pendingClose = -1;
             lastKey = p.key;
         }
@@ -700,7 +711,7 @@ private:
 
     //==========================================================================
     double fs = 44100.0;
-    int lookahead = 0;
+    int lookahead = 0, curLookahead = 0;
     std::vector<float> delay;
     int dpos = 0;
     Rng rng;

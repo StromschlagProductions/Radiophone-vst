@@ -2,11 +2,11 @@
 #include <juce_audio_utils/juce_audio_utils.h>
 #include "RadiophoneDSP.h"
 
-class RadiophoneProcessor : public juce::AudioProcessor
+class RadiophoneProcessor : public juce::AudioProcessor, private juce::AsyncUpdater
 {
 public:
     RadiophoneProcessor();
-    ~RadiophoneProcessor() override = default;
+    ~RadiophoneProcessor() override { cancelPendingUpdate(); }
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override {}
@@ -45,6 +45,8 @@ public:
 private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
     rph::Engine engine;
+    void handleAsyncUpdate() override { setLatencySamples (reportedLatency.load()); }
+    std::atomic<int> reportedLatency { 0 };
     rph::Samples rawSamples;      // dekodiert, Abtastrate der Datei
     void loadSamples();
     std::vector<float> mono;

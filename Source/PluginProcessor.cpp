@@ -105,7 +105,9 @@ void RadiophoneProcessor::prepareToPlay (double sampleRate, int maxBlock)
     engine.prepare (sampleRate);
     engine.setSamples (rawSamples);
     mono.assign ((size_t) juce::jmax (maxBlock, 4096), 0.0f);
-    setLatencySamples (engine.latencySamples());   // Vorlauf fuer das Oeffnungsgeraeusch, gleicht der Host aus
+    engine.setMode (juce::roundToInt (pMode->load()));
+    reportedLatency = engine.latencySamples();
+    setLatencySamples (reportedLatency.load());   // nur im Funkmodus: Vorlauf fuer das Tschk, gleicht der Host aus
 }
 
 bool RadiophoneProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
@@ -156,6 +158,11 @@ void RadiophoneProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
     }
 
     engine.process (m, numSamples, p);
+    if (engine.latencySamples() != reportedLatency.load())
+    {
+        reportedLatency = engine.latencySamples();   // Moduswechsel: Host ueber neue Latenz informieren
+        triggerAsyncUpdate();
+    }
     transmitting.store (engine.isTransmitting());
     tuning.store (engine.isTuning());
 
