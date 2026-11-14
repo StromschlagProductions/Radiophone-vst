@@ -77,7 +77,7 @@ static juce::AttributedString buildHelp (juce::Colour text, juce::Colour accent,
     body ("Lautst\xc3\xa4rke aller eingebauten Ger\xc3\xa4usche: Squelch, Rauschen, Knacken, Senderwechsel und Telefont\xc3\xb6ne. Die Stimme bleibt davon unber\xc3\xbchrt.");
 
     head ("Allgemein");
-    body ("Das Plugin meldet dem Host 80 ms Latenz (Vorlauf f\xc3\xbcr das Tschk vor dem ersten Wort). Studio One gleicht das automatisch aus.");
+    body ("Nur im Funkmodus meldet das Plugin dem Host 30 ms Latenz (Vorlauf, damit das Tschk vor dem ersten Wort liegt). Radio und Telefon haben keine Latenz. Studio One gleicht das automatisch aus.");
     body ("Doppelklick auf einen Drehregler setzt ihn zur\xc3\xbc\x63k. Look: Dunkel / Hell, das Fenster ist am rechten unteren Rand skalierbar (50\xe2\x80\x93\x33\x30\x30 %).");
 
     head ("Idee und Konzept");
