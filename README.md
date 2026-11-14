@@ -11,10 +11,6 @@ der Sprechtaste, Rauschen und Knacken im Radio, Wählton, Wählscheibe, Freizeic
 
 **⬇ Download (Windows · VST3 · Stereo):** https://github.com/StromschlagProductions/Radiophone-vst/releases/latest
 
-**Info-Seite:** https://stromschlagproductions.github.io/Radiophone-vst/
-
-**Status:** Version 1.0. Klang und Bedienung werden in der Praxis noch nachgeschärft.
-
 ## Warum es dieses Plugin gibt
 
 In fast jedem meiner Hörspiele kommt irgendwann eine Funkdurchsage, ein Radio oder ein Telefonat vor. Den Klang
