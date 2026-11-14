@@ -1,4 +1,4 @@
-# RADIOPHONE – Funk, Radio und Telefon für Hörspiele
+# RADIOPHONE – Audio Drama Radio & Phone Simulator
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/logo-dunkel.png">
@@ -13,7 +13,7 @@ der Sprechtaste, Rauschen und Knacken im Radio, Wählton, Wählscheibe, Freizeic
 
 **Info-Seite:** https://stromschlagproductions.github.io/Radiophone-vst/
 
-**Status:** erste Testversion (0.1). Klang und Bedienung werden noch abgestimmt.
+**Status:** Version 1.0. Klang und Bedienung werden in der Praxis noch nachgeschärft.
 
 ## Warum es dieses Plugin gibt
 
@@ -106,6 +106,7 @@ gesteuert. Die Stimme ist nur bei **Gespräch** zu hören.
 Die Versionsnummer steht in der Datei `VERSION`, im Plugin-Kopf und im Namen der Release. Sie wird bei jeder
 Änderung hochgezählt.
 
+- **1.0** – Untertitel „Audio Drama Radio & Phone Simulator“, Versionsnummer auf 1.0 gesetzt (die 0.x-Versionen waren Testläufe).
 - **0.1.0** – Erste Testversion: Modi Funk (Walkie-Talkie, Autofunk, Tischfunk; Sprechtaste mit Automatik,
   Abhacken), Radio (Rauschen, Knacken, Schwund, Senderwechsel) und Telefon (Leitungszustände, Wählscheibe und
   Tasten, Hörergeräusche); Oberfläche im Stil von LOCATIONS mit Hilfe, Hell/Dunkel und skalierbarem Fenster.

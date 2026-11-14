@@ -323,21 +323,21 @@ void RadiophoneEditor::paint (juce::Graphics& g)
         g.drawImage (logo, juce::Rectangle<float> (14.0f, 4.0f, 56.0f, 56.0f), juce::RectanglePlacement::centred, true);
     }
 
-    const juce::Font titleFont (juce::FontOptions (24.0f, juce::Font::bold));
-    const juce::Font subFont (juce::FontOptions (13.0f, juce::Font::bold));
+    const juce::Font titleFont (juce::FontOptions (22.0f, juce::Font::bold));
+    const juce::Font subFont (juce::FontOptions (11.5f, juce::Font::bold));
     auto textWidth = [] (const juce::Font& f, const juce::String& t)
     {
         juce::GlyphArrangement ga; ga.addLineOfText (f, t, 0.0f, 0.0f);
         return ga.getBoundingBox (0, -1, true).getWidth();
     };
-    const juce::String sub = u8 ("FUNK \xc2\xb7 RADIO \xc2\xb7 TELEFON");
-    const float subX = 80.0f + textWidth (titleFont, "RADIOPHONE") + 18.0f;
+    const juce::String sub = "AUDIO DRAMA RADIO & PHONE SIMULATOR";
+    const float subX = 80.0f + textWidth (titleFont, "RADIOPHONE") + 16.0f;
     g.setColour (theme.text);
     g.setFont (titleFont);
-    g.drawText ("RADIOPHONE", 80, 8, 200, 30, juce::Justification::centredLeft);
+    g.drawText ("RADIOPHONE", 80, 9, 200, 28, juce::Justification::centredLeft);
     g.setColour (theme.accent);
     g.setFont (subFont);
-    g.drawText (sub, (int) subX, 15, 260, 22, juce::Justification::centredLeft);
+    g.drawText (sub, (int) subX, 14, 340, 22, juce::Justification::centredLeft);
     g.setColour (theme.dim);
     g.setFont (juce::FontOptions (11.0f));
     g.drawText (u8 ("STROMSCHLAG AUDIO  \xc2\xb7  v" PLUGIN_VERSION_TEXT), 80, 36, 300, 16, juce::Justification::centredLeft);
