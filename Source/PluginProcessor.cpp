@@ -1,0 +1,137 @@
+#include "PluginProcessor.h"
+#include "PluginEditor.h"
+
+static juce::String u8 (const char* s) { return juce::String (juce::CharPointer_UTF8 (s)); }
+
+// Reihenfolgen muessen zu den enums in RadiophoneDSP.h passen
+juce::StringArray RadiophoneProcessor::modeNames()   { return { "Funk", "Radio", "Telefon" }; }
+juce::StringArray RadiophoneProcessor::deviceNames() { return { "Walkie-Talkie", "Autofunk", "Tischfunk" }; }
+juce::StringArray RadiophoneProcessor::keyNames()    { return { "Automatik", u8 ("Gedr\xc3\xbc" "ckt"), "Losgelassen" }; }
+juce::StringArray RadiophoneProcessor::lineNames()
+{
+    return { u8 ("Gespr\xc3\xa4" "ch"), "Aufgelegt", u8 ("W\xc3\xa4" "hlton"), u8 ("W\xc3\xa4" "hlen"), "Freizeichen", "Besetzt" };
+}
+juce::StringArray RadiophoneProcessor::dialNames()   { return { u8 ("W\xc3\xa4" "hlscheibe"), "Tasten" }; }
+
+juce::AudioProcessorValueTreeState::ParameterLayout RadiophoneProcessor::createLayout()
+{
+    using namespace juce;
+    AudioProcessorValueTreeState::ParameterLayout layout;
+
+    auto seconds = AudioParameterFloatAttributes().withStringFromValueFunction (
+        [] (float v, int) { return String (v, 1).replaceCharacter ('.', ',') + " s"; });
+    auto decibel = AudioParameterFloatAttributes().withStringFromValueFunction (
+        [] (float v, int) { return (v > 0 ? "+" : "") + String (v, 1).replaceCharacter ('.', ',') + " dB"; });
+    auto gateText = AudioParameterFloatAttributes().withStringFromValueFunction (
+        [] (float v, int) { const int pct = roundToInt (v * 100.0f); return pct <= 0 ? String ("aus") : String (pct) + " %"; });
+
+    layout.add (std::make_unique<AudioParameterChoice> (ParameterID { "mode", 1 }, "Modus", modeNames(), 0));
+    layout.add (std::make_unique<AudioParameterChoice> (ParameterID { "device", 1 }, u8 ("Funk: Ger\xc3\xa4t"), deviceNames(), 0));
+    layout.add (std::make_unique<AudioParameterChoice> (ParameterID { "key", 1 }, "Funk: Sprechtaste", keyNames(), 0));
+    NormalisableRange<float> pauseRange (0.2f, 3.0f, 0.05f);
+    pauseRange.setSkewForCentre (0.8f);
+    layout.add (std::make_unique<AudioParameterFloat> (ParameterID { "pause", 1 }, "Funk: Pause bis Tastenende", pauseRange, 0.6f, seconds));
+    layout.add (std::make_unique<AudioParameterFloat> (ParameterID { "gate", 1 }, "Funk: Abhacken (Gate)",
+                                                       NormalisableRange<float> (0.0f, 1.0f), 0.0f, gateText));
+    layout.add (std::make_unique<AudioParameterBool> (ParameterID { "tune", 1 }, "Radio: Senderwechsel", false));
+    layout.add (std::make_unique<AudioParameterChoice> (ParameterID { "line", 1 }, "Telefon: Leitung", lineNames(), 0));
+    layout.add (std::make_unique<AudioParameterChoice> (ParameterID { "dial", 1 }, u8 ("Telefon: W\xc3\xa4hlart"), dialNames(), 0));
+    layout.add (std::make_unique<AudioParameterFloat> (ParameterID { "sfx", 1 }, u8 ("Ger\xc3\xa4usche"),
+                                                       NormalisableRange<float> (-24.0f, 6.0f, 0.1f), 0.0f, decibel));
+    return layout;
+}
+
+RadiophoneProcessor::RadiophoneProcessor()
+    : AudioProcessor (BusesProperties()
+                          .withInput ("Input", juce::AudioChannelSet::stereo(), true)
+                          .withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
+      apvts (*this, nullptr, "RADIOPHONE", createLayout())
+{
+    pMode = apvts.getRawParameterValue ("mode");
+    pDevice = apvts.getRawParameterValue ("device");
+    pKey = apvts.getRawParameterValue ("key");
+    pPause = apvts.getRawParameterValue ("pause");
+    pGate = apvts.getRawParameterValue ("gate");
+    pSfx = apvts.getRawParameterValue ("sfx");
+    pTune = apvts.getRawParameterValue ("tune");
+    pLine = apvts.getRawParameterValue ("line");
+    pDial = apvts.getRawParameterValue ("dial");
+}
+
+void RadiophoneProcessor::prepareToPlay (double sampleRate, int maxBlock)
+{
+    engine.prepare (sampleRate);
+    mono.assign ((size_t) juce::jmax (maxBlock, 4096), 0.0f);
+    setLatencySamples (engine.latencySamples());   // Vorlauf fuer das Oeffnungsgeraeusch, gleicht der Host aus
+}
+
+bool RadiophoneProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+{
+    const auto out = layouts.getMainOutputChannelSet();
+    const auto in = layouts.getMainInputChannelSet();
+    if (out != juce::AudioChannelSet::mono() && out != juce::AudioChannelSet::stereo())
+        return false;
+    if (in == out) return true;
+    return in == juce::AudioChannelSet::mono() && out == juce::AudioChannelSet::stereo();
+}
+
+void RadiophoneProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
+{
+    juce::ScopedNoDenormals noDenormals;
+    const int numSamples = buffer.getNumSamples();
+    const int numCh = buffer.getNumChannels();
+    const int numIn = juce::jmin (getTotalNumInputChannels(), numCh);
+    if (numSamples == 0 || numCh == 0)
+        return;
+    if ((int) mono.size() < numSamples)
+        mono.resize ((size_t) numSamples);   // sollte nie passieren (Host haelt sich an die Blockgroesse)
+
+    rph::Params p;
+    p.mode = juce::roundToInt (pMode->load());
+    p.device = juce::roundToInt (pDevice->load());
+    p.key = juce::roundToInt (pKey->load());
+    p.pauseSec = pPause->load();
+    p.gate = pGate->load();
+    p.sfxDb = pSfx->load();
+    p.tuneCount = pTune->load() > 0.5f ? 1 : 0;   // jede Aenderung loest einen Senderwechsel aus
+    p.line = juce::roundToInt (pLine->load());
+    p.dialType = juce::roundToInt (pDial->load());
+
+    // Funk, Radio und Telefon sind mono: Eingang zusammenmischen
+    float* m = mono.data();
+    std::fill (m, m + numSamples, 0.0f);
+    if (numIn > 0)
+    {
+        const float g = 1.0f / (float) numIn;
+        for (int ch = 0; ch < numIn; ++ch)
+        {
+            const float* src = buffer.getReadPointer (ch);
+            for (int i = 0; i < numSamples; ++i)
+                m[i] += src[i] * g;
+        }
+    }
+
+    engine.process (m, numSamples, p);
+    transmitting.store (engine.isTransmitting());
+    tuning.store (engine.isTuning());
+
+    for (int ch = 0; ch < numCh; ++ch)
+        buffer.copyFrom (ch, 0, m, numSamples);
+}
+
+void RadiophoneProcessor::getStateInformation (juce::MemoryBlock& destData)
+{
+    if (auto xml = apvts.copyState().createXml())
+        copyXmlToBinary (*xml, destData);
+}
+
+void RadiophoneProcessor::setStateInformation (const void* data, int sizeInBytes)
+{
+    if (auto xml = getXmlFromBinary (data, sizeInBytes))
+        if (xml->hasTagName (apvts.state.getType()))
+            apvts.replaceState (juce::ValueTree::fromXml (*xml));
+}
+
+juce::AudioProcessorEditor* RadiophoneProcessor::createEditor() { return new RadiophoneEditor (*this); }
+
+juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() { return new RadiophoneProcessor(); }
