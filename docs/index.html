@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RADIOPHONE – Funk, Radio und Telefon · Stromschlag Audio</title>
+<meta name="description" content="RADIOPHONE: VST3-Effekt für Hörspielproduktionen. Funk mit automatischem Squelch, Radio mit Rauschen und Senderwechsel, Telefon mit Wählton und Wählscheibe. Stromschlag Audio.">
+<style>
+  :root { --bg:#14161a; --panel:#1d2026; --text:#e9e6df; --muted:#9a968c; --accent:#e0a030; --line:#2c2f37; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height:1.6; }
+  main { max-width: 900px; margin: 0 auto; padding: 48px 24px 64px; }
+  .logo-box { background:#fff; display:inline-block; border-radius:10px; padding:14px 20px; }
+  .logo-box img { display:block; height:56px; width:auto; }
+  h1 { font-size: 2.4rem; margin: 28px 0 4px; letter-spacing: .02em; }
+  h1 .mark { color: var(--muted); vertical-align: -3px; margin-left: 14px; }
+  .sub { color: var(--muted); margin: 0 0 20px; font-size: 1.1rem; }
+  .lead { font-size: 1.15rem; max-width: 46em; }
+  .btn { display:inline-block; margin: 26px 0 8px; padding: 14px 26px; background: var(--accent); color:#1a1305; font-weight: 700; text-decoration:none; border-radius: 8px; }
+  .btn:hover { filter: brightness(1.08); }
+  .meta { color: var(--muted); font-size: .92rem; margin-bottom: 36px; }
+  h2 { font-size: 1.3rem; margin: 40px 0 12px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+  ul { padding-left: 1.2em; }
+  li { margin: .35em 0; }
+  .shots { display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .shots figure { margin: 0; background: var(--panel); border:1px solid var(--line); border-radius:10px; padding:10px; }
+  .shots img { width:100%; display:block; border-radius:6px; }
+  .shots figcaption { color: var(--muted); font-size: .9rem; margin-top: 8px; text-align:center; }
+  @media (max-width: 640px) { .shots { grid-template-columns: 1fr; } h1 { font-size: 1.9rem; } }
+  code { background: var(--panel); padding: 1px 6px; border-radius: 4px; font-size: .95em; }
+  footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: .92rem; }
+  footer a { color: var(--accent); }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+
+  <div class="logo-box"><img src="logo.png" alt="Stromschlag Audio"></div>
+
+  <h1>RADIOPHONE
+    <svg class="mark" viewBox="-2 -7 17 37" width="24" height="52" aria-hidden="true">
+      <rect x="0" y="9" width="12" height="20" rx="2" fill="currentColor" fill-opacity=".25" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M3 9V0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <path d="M3 19h6M3 22h6M3 25h6" stroke="currentColor" stroke-width="1.2"/>
+      <rect x="3" y="12" width="6" height="4" fill="none" stroke="currentColor" stroke-width="1.2"/>
+      <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+        <path d="M6.29 -1.07A4.5 4.5 0 0 1 6.29 5.07"/>
+        <path d="M8.85 -3.46A8 8 0 0 1 8.85 7.46"/>
+        <path d="M11.41 -5.84A11.5 11.5 0 0 1 11.41 9.84"/>
+      </g>
+    </svg>
+  </h1>
+  <p class="sub">Funk · Radio · Telefon für Hörspiele · Stromschlag Audio</p>
+
+  <p class="lead">Ein VST3-Insert-Effekt für Hörspielproduktionen. Er lässt eine Stimme oder Musik klingen, als käme sie
+  aus einem Funkgerät, einem Radio oder einem Telefon, und bringt die Geräusche gleich mit: Tschk und Kschhh der
+  Sprechtaste, Rauschen und Senderwechsel im Radio, Wählton, Wählscheibe und Freizeichen am Telefon.</p>
+
+  <a class="btn" id="dl" href="https://github.com/StromschlagProductions/Radiophone-vst/releases/latest">⬇ Download (Windows, VST3)</a>
+  <div class="meta" id="ver">Aktuelle Version: <span id="vnum">0.1.0</span> · Installation: ZIP entpacken, den ganzen Ordner <code>Radiophone.vst3</code> nach <code>C:\Program Files\Common Files\VST3</code> kopieren.</div>
+
+  <h2>Was es kann</h2>
+  <ul>
+    <li><strong>Funk mit automatischem Squelch:</strong> Walkie-Talkie, Autofunk oder Tischfunk. Die Sprechtaste öffnet beim ersten Wort und schließt erst nach einer einstellbaren Pause – kurze Sprechpausen lösen nichts aus. Wer es genau will, steuert die Taste per Automation.</li>
+    <li><strong>Abhacken:</strong> schlechter Empfang, bei dem die Verbindung an leisen Stellen hart wegbricht.</li>
+    <li><strong>Radio:</strong> fester Radioklang mit leisem Rauschen, Knacken und Empfangsschwund, dazu ein Senderwechsel auf Knopfdruck oder per Automation.</li>
+    <li><strong>Telefon:</strong> Leitungszustände Gespräch, Aufgelegt, Wählton, Wählen, Freizeichen und Besetzt, mit Wählscheibe oder Tasten und dem Klacken des Hörers.</li>
+    <li><strong>Fest abgestimmt:</strong> kein Mix-Regler, kein Ausgangspegel. Plugin drauf, Modus wählen, fertig. Alle Geräusche sind eingebaut.</li>
+    <li><strong>Vergrößerbare Oberfläche</strong> von 50 % bis 300 %, hell und dunkel.</li>
+  </ul>
+
+  <h2>Oberfläche</h2>
+  <div class="shots">
+    <figure><img src="oberflaeche-funk.png" alt="RADIOPHONE, Funk"><figcaption>Funk</figcaption></figure>
+    <figure><img src="oberflaeche-radio.png" alt="RADIOPHONE, Radio"><figcaption>Radio</figcaption></figure>
+    <figure><img src="oberflaeche-telefon.png" alt="RADIOPHONE, Telefon (hell)"><figcaption>Telefon (hell)</figcaption></figure>
+  </div>
+
+  <h2>Mehr</h2>
+  <p>Alle Regler, Anwendungsbeispiele, die Versionshistorie und den Quellcode gibt es in der
+  <a href="https://github.com/StromschlagProductions/Radiophone-vst#readme">README auf GitHub</a>.</p>
+
+  <footer>
+    RADIOPHONE · Stromschlag Audio · Lars Eickstädt<br>
+    Gebaut mit <a href="https://juce.com">JUCE</a>. Sättigung nach Airwindows Density (Chris Johnson, MIT-Lizenz).
+  </footer>
+
+</main>
+<script>
+  // Version und Download-Link immer aus dem neuesten Release holen, damit die Seite nicht veraltet.
+  fetch("https://api.github.com/repos/StromschlagProductions/Radiophone-vst/releases/latest")
+    .then(r => r.ok ? r.json() : null)
+    .then(rel => {
+      if (!rel) return;
+      if (rel.tag_name) document.getElementById("vnum").textContent = rel.tag_name.replace(/^v/, "").replace(/-b\d+$/, "");
+      const zip = (rel.assets || []).find(a => a.name.endsWith(".zip"));
+      if (zip) document.getElementById("dl").href = zip.browser_download_url;
+    })
+    .catch(() => {});
+</script>
+</body>
+</html>
