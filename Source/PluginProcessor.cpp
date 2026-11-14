@@ -1,5 +1,8 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#if RPH_HAS_SAMPLES
+ #include <BinaryData.h>
+#endif
 
 static juce::String u8 (const char* s) { return juce::String (juce::CharPointer_UTF8 (s)); }
 
@@ -56,11 +59,48 @@ RadiophoneProcessor::RadiophoneProcessor()
     pTune = apvts.getRawParameterValue ("tune");
     pLine = apvts.getRawParameterValue ("line");
     pDial = apvts.getRawParameterValue ("dial");
+    loadSamples();
+}
+
+#if RPH_HAS_SAMPLES
+static bool decodeWav (const void* data, int size, std::vector<float>& out, double& rate)
+{
+    juce::WavAudioFormat wav;
+    auto stream = std::make_unique<juce::MemoryInputStream> (data, (size_t) size, false);
+    std::unique_ptr<juce::AudioFormatReader> reader (wav.createReaderFor (stream.release(), true));
+    if (reader == nullptr || reader->lengthInSamples <= 0)
+        return false;
+    rate = reader->sampleRate;
+    juce::AudioBuffer<float> buf ((int) reader->numChannels, (int) reader->lengthInSamples);
+    reader->read (&buf, 0, (int) reader->lengthInSamples, 0, true, true);
+    out.assign (buf.getReadPointer (0), buf.getReadPointer (0) + buf.getNumSamples());
+    return true;
+}
+#endif
+
+void RadiophoneProcessor::loadSamples()
+{
+#if RPH_HAS_SAMPLES
+    double rate = 44100.0;
+    std::vector<float> v;
+    auto load = [&] (const void* d, int sz, std::vector<float>& dst)
+    {
+        if (decodeWav (d, sz, v, rate)) { dst = v; rawSamples.rate = rate; }
+    };
+    load (BinaryData::sq_walkie_open_wav, BinaryData::sq_walkie_open_wavSize, rawSamples.sqOpen[rph::kWalkie]);
+    load (BinaryData::sq_walkie_close_wav, BinaryData::sq_walkie_close_wavSize, rawSamples.sqClose[rph::kWalkie]);
+    load (BinaryData::sq_auto_open_wav, BinaryData::sq_auto_open_wavSize, rawSamples.sqOpen[rph::kAutofunk]);
+    load (BinaryData::sq_auto_close_wav, BinaryData::sq_auto_close_wavSize, rawSamples.sqClose[rph::kAutofunk]);
+    load (BinaryData::sq_tisch_open_wav, BinaryData::sq_tisch_open_wavSize, rawSamples.sqOpen[rph::kTischfunk]);
+    load (BinaryData::sq_tisch_close_wav, BinaryData::sq_tisch_close_wavSize, rawSamples.sqClose[rph::kTischfunk]);
+    load (BinaryData::tune_wav, BinaryData::tune_wavSize, rawSamples.tune);
+#endif
 }
 
 void RadiophoneProcessor::prepareToPlay (double sampleRate, int maxBlock)
 {
     engine.prepare (sampleRate);
+    engine.setSamples (rawSamples);
     mono.assign ((size_t) juce::jmax (maxBlock, 4096), 0.0f);
     setLatencySamples (engine.latencySamples());   // Vorlauf fuer das Oeffnungsgeraeusch, gleicht der Host aus
 }

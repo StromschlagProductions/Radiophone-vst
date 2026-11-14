@@ -148,10 +148,48 @@ struct Params
 };
 
 //==============================================================================
+// Eingebaute Aufnahmen (optional). Ohne sie klingt alles synthetisch.
+struct Samples
+{
+    double rate = 44100.0;                 // Abtastrate der Rohdaten
+    std::vector<float> sqOpen[3], sqClose[3], tune;   // je Geraet: Oeffnen und Schliessen, dazu Senderwechsel
+};
+
 class Engine
 {
 public:
     static constexpr float kLookaheadSec = 0.08f;
+    static constexpr float kSqSampleGain = 0.5f;     // Pegel der Squelch-Aufnahmen
+    static constexpr float kTuneSampleGain = 0.9f;   // Pegel der Senderwechsel-Aufnahme
+
+    // nach prepare() aufrufen: rechnet die Aufnahmen auf die Abtastrate der DAW um
+    void setSamples (const Samples& in)
+    {
+        if (fs <= 0.0) return;
+        auto conv = [&] (const std::vector<float>& v)
+        {
+            std::vector<float> o;
+            if (v.empty()) return o;
+            const double ratio = in.rate / fs;
+            const size_t n = (size_t) std::max (1.0, std::floor ((double) v.size() / ratio));
+            o.resize (n);
+            for (size_t i = 0; i < n; ++i)
+            {
+                const double pos = (double) i * ratio;
+                const size_t a = (size_t) pos, b = std::min (a + 1, v.size() - 1);
+                const float f = (float) (pos - (double) a);
+                o[i] = v[a] * (1.0f - f) + v[b] * f;
+            }
+            return o;
+        };
+        for (int d = 0; d < 3; ++d)
+        {
+            smp.sqOpen[d] = conv (in.sqOpen[d]);
+            smp.sqClose[d] = conv (in.sqClose[d]);
+        }
+        smp.tune = conv (in.tune);
+        hasSamples = true;
+    }
 
     void prepare (double sampleRate)
     {
@@ -273,7 +311,7 @@ public:
 
             const float out = y * vg
                             + fxBand.process (fx) * sfx
-                            + density (sqBand.process (sq), 1.0f) * 0.75f * sfx   // Spitzen weich gedeckelt
+                            + (lastSqSample ? sq : density (sqBand.process (sq), 1.0f) * 0.75f) * sfx   // Aufnahmen ungefiltert
                             + mechBand.process (mc) * sfx;
             buf[i] = std::isfinite (out) ? out : 0.0f;
         }
@@ -354,13 +392,25 @@ private:
 
     //--------------------------------------------------------------------------
     // FUNK
-    struct Squelch { int pos = 0, len = 0, body = 0; bool closing = false; float level = 0; };
+    struct Squelch { int pos = 0, len = 0, body = 0; bool closing = false; float level = 0; const std::vector<float>* src = nullptr; };
+    Samples smp;
+    bool hasSamples = false;
+    bool lastSqSample = false;
     Squelch squelch;
 
     void openTx (const Params& p)
     {
         txOpen = true;
         voiceTarget = 1.0f;
+        if (hasSamples && ! smp.sqOpen[p.device].empty())
+        {
+            squelch = {};
+            squelch.src = &smp.sqOpen[p.device];
+            squelch.len = (int) squelch.src->size();
+            squelch.level = kSqSampleGain;
+            silentSamples = 0;
+            return;
+        }
         // Oeffnen: kurzes "Tschk" (Klick + kurzer Rauschstoss)
         squelch.pos = 0;
         squelch.closing = false;
@@ -376,6 +426,14 @@ private:
         pendingClose = -1;
         voiceTarget = 0.0f;
         // Schliessen: flacher Rauschstoss mit hartem Ende (das typische "Kschhh")
+        if (hasSamples && ! smp.sqClose[p.device].empty())
+        {
+            squelch = {};
+            squelch.src = &smp.sqClose[p.device];
+            squelch.len = (int) squelch.src->size();
+            squelch.level = kSqSampleGain;
+            return;
+        }
         const double body = p.device == kWalkie ? 0.30 : p.device == kAutofunk ? 0.085 : 0.17;
         squelch.pos = 0;
         squelch.closing = true;
@@ -387,6 +445,9 @@ private:
 
     float nextSquelch()
     {
+        lastSqSample = squelch.src != nullptr;
+        if (squelch.src)
+            return squelch.pos < squelch.len ? (*squelch.src)[(size_t) squelch.pos++] * squelch.level : 0.0f;
         if (squelch.pos >= squelch.len) return 0.0f;
         const int i = squelch.pos++;
         const float t = (float) i / (float) fs;
@@ -419,7 +480,7 @@ private:
 
     void startTuning()
     {
-        tuneLen = (int) (1.25 * fs);
+        tuneLen = hasSamples && ! smp.tune.empty() ? (int) smp.tune.size() : (int) (1.25 * fs);
         tuneLeft = tuneLen;
         tuneF1 = 2600.0f + 900.0f * rng.uni();
         tuneF2 = 300.0f + 500.0f * rng.uni();
@@ -483,8 +544,15 @@ private:
             // Rauschen durch einen wandernden Resonanzfilter
             tuneRes.setBandpass (fs, 400.0 + 2500.0 * std::abs (std::sin (kPi * 1.7f * t)), 2.5);
             const float res = tuneRes.process (rng.bi());
-            fx += mid * (0.10f * std::sin (tuneP1) + 0.06f * std::sin (tuneP2)
-                         + 0.35f * res * chop + 0.06f * rng.bi());
+            if (hasSamples && ! smp.tune.empty())
+            {
+                const int idx = tuneLen - tuneLeft;
+                if (idx >= 0 && idx < (int) smp.tune.size())
+                    fx += smp.tune[(size_t) idx] * kTuneSampleGain;
+            }
+            else
+                fx += mid * (0.10f * std::sin (tuneP1) + 0.06f * std::sin (tuneP2)
+                             + 0.35f * res * chop + 0.06f * rng.bi());
             --tuneLeft;
         }
 

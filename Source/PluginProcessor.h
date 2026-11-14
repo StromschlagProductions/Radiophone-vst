@@ -45,6 +45,8 @@ public:
 private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
     rph::Engine engine;
+    rph::Samples rawSamples;      // dekodiert, Abtastrate der Datei
+    void loadSamples();
     std::vector<float> mono;
     std::atomic<float>* pMode = nullptr; std::atomic<float>* pDevice = nullptr;
     std::atomic<float>* pKey = nullptr;  std::atomic<float>* pPause = nullptr;

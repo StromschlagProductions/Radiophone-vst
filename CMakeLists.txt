@@ -23,7 +23,16 @@ else()
     FetchContent_MakeAvailable(JUCE)
 endif()
 
-juce_add_binary_data(RadiophoneAssets SOURCES Assets/logo.png)
+# Eingebaute Aufnahmen (Squelch, Senderwechsel) nur, wenn der Ordner lokal vorhanden ist.
+# Die Aufnahmen stammen von einer freien Seite und sind nicht im Repo (Lizenz klaeren).
+set(RPH_ASSET_SOURCES Assets/logo.png)
+set(RPH_SAMPLE_DEFS "RPH_HAS_SAMPLES=0")
+file(GLOB RPH_SAMPLE_FILES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/Assets/samples/*.wav)
+if(RPH_SAMPLE_FILES)
+    list(APPEND RPH_ASSET_SOURCES ${RPH_SAMPLE_FILES})
+    set(RPH_SAMPLE_DEFS "RPH_HAS_SAMPLES=1")
+endif()
+juce_add_binary_data(RadiophoneAssets SOURCES ${RPH_ASSET_SOURCES})
 
 juce_add_plugin(Radiophone
     COMPANY_NAME "Stromschlag Audio"
@@ -47,7 +56,8 @@ target_compile_definitions(Radiophone PUBLIC
     JUCE_WEB_BROWSER=0
     JUCE_USE_CURL=0
     JUCE_VST3_CAN_REPLACE_VST2=0
-    JUCE_DISPLAY_SPLASH_SCREEN=0)
+    JUCE_DISPLAY_SPLASH_SCREEN=0
+    ${RPH_SAMPLE_DEFS})
 
 if(MSVC)
     target_compile_options(Radiophone PRIVATE /utf-8)
