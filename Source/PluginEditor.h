@@ -81,7 +81,7 @@ private:
 
     // Funk
     juce::ComboBox deviceBox, keyBox;
-    Knob gate, pause;
+    Knob gate, pause, intf;
     // Radio
     juce::TextButton tuneButton;
     juce::Label radioInfo;

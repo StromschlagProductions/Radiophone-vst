@@ -24,7 +24,7 @@ else()
 endif()
 
 # Eingebaute Aufnahmen (Squelch, Senderwechsel) nur, wenn der Ordner lokal vorhanden ist.
-# Die Aufnahmen stammen von einer freien Seite und sind nicht im Repo (Lizenz klaeren).
+# Die Aufnahmen stammen aus der HoerTalk-Community und sind dort frei nutzbar.
 set(RPH_ASSET_SOURCES Assets/logo.png)
 set(RPH_SAMPLE_DEFS "RPH_HAS_SAMPLES=0")
 file(GLOB RPH_SAMPLE_FILES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/Assets/samples/*.wav)
