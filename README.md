@@ -23,6 +23,8 @@ läuft komplett durch den Effekt.
 
 – Lars Eickstädt, Stromschlag Audio
 
+RADIOPHONE soll niemandem die Erfahrung abnehmen, Funk und Radio selbst zu gestalten. Gerade am Anfang kann es viel Spaß machen und lehrreich sein, einen Funkspruch selbst aufzubauen und zu hören, wie Bandbreite, Rauschen und Verzerrung ineinandergreifen. Ich bin dankbar, dass ich diesen Weg selbst gegangen bin, auch wenn er manchmal umständlich und mühselig war. Gerade dadurch weiß ich, was ich mir von einem Werkzeug wünsche, das all das in einem vereint. RADIOPHONE soll das Gestalten nicht ersetzen, sondern die technische Umsetzung im Alltag einfacher machen.
+
 ## Oberfläche
 
 | Funk (dunkel) | Radio (dunkel) | Telefon (hell) |
