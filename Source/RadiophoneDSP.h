@@ -244,11 +244,11 @@ public:
         reset();
     }
 
-    // Fixed in every mode: no asynchronous PDC changes during automation.
+    // Only Funk needs lookahead; Radio and Telefon remain zero-latency.
     int latencySamples() const { return curLookahead; }
-    static int latencyFor (int mode, double sampleRate) { (void) mode; return (int) std::lround (kLookaheadSec * sampleRate); }
+    static int latencyFor (int mode, double sampleRate) { return mode == kFunk ? (int) std::lround (kLookaheadSec * sampleRate) : 0; }
     // setzt den Modus vor dem ersten Block (fuer die gemeldete Latenz)
-    void setMode (int) { curLookahead = lookahead; }
+    void setMode (int mode) { curLookahead = mode == kFunk ? lookahead : 0; }
     bool isTransmitting() const { return txOpen; }
     bool isTuning() const { return tuneLeft > 0; }
 
@@ -408,7 +408,7 @@ private:
             firstBlock = true;
         }
         lastMode = p.mode; lastDevice = p.device;
-        curLookahead = lookahead;
+        setMode (p.mode);
         configured = true;
     }
 

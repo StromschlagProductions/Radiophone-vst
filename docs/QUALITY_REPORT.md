@@ -5,8 +5,9 @@ Ausgangsstand: `46704018212ce57390cc14f0f77f55da42bf467e`.
 ## Bestätigt und korrigiert
 
 - `mono.resize()` konnte bei übergroßen Hostblöcken im Audiothread allokieren.
-- `triggerAsyncUpdate()` konnte aus dem Audiothread Nachrichten versenden; Latenzmeldung
-  und tatsächlicher Moduswechsel waren zeitlich nicht synchron.
+- `triggerAsyncUpdate()` konnte aus dem Audiothread Nachrichten versenden; ersetzt durch
+  ein atomares Postfach und einen Prozessor-Timer. Host-PDC bleibt bei laufenden
+  Moduswechseln asynchron (siehe technische Dokumentation).
 - `lastKeyShown` war zwischen allen Fenstern geteilt.
 - Jeder Gerätewechsel leerte den Vorlauf; Moduswechsel stoppten Squelch/Senderwechsel.
 - Die Senderwechsel-Synthese lief trotz Verwendung einer Aufnahme weiter.
@@ -19,14 +20,14 @@ pauschales Abschalten von Filtern oder Geräuschfahnen eingebaut.
 
 ## Klang und Kompatibilität
 
-Grundklänge, Parameter und Kennungen bleiben erhalten. Radio/Telefon erhalten jetzt
-rund 30 ms deklarierte Latenz; das ist beim Live-Monitoring und in alten Projekten zu
-beachten. Übergänge sind geglättet, ausgelöste Geräusche können über einen Moduswechsel
+Grundklänge, Parameter und Kennungen bleiben erhalten. Wie bisher: Funk rund 30 ms,
+Radio und Telefon 0 ms Plugin-Latenz. Den Modus vor der Wiedergabe wählen. Übergänge sind geglättet, ausgelöste Geräusche können über einen Moduswechsel
 hinaus ausklingen. Zufällige Radio-Geräusche nach Senderwechseln sind nicht bitidentisch.
 
 ## Validierung
 
-Geprüfter Code: `f3ae6a17f497ee383a8708eb20828d7c7034fd3e`.
+Die folgenden CI-Messungen beziehen sich auf `f3ae6a17f497ee383a8708eb20828d7c7034fd3e`
+vor der Rückkehr zu modusabhängiger Latenz. Neue Testergebnisse folgen unten.
 
 - Windows-x64-VST3-Build erfolgreich; beide CTest-Suites und `pluginval` Stufe 8 bestanden.
   [Windows-CI](https://github.com/StromschlagProductions/Radiophone-vst/actions/runs/43821308238).
@@ -76,6 +77,6 @@ Testumfang und Befehle: [Technische Prüfung](TECHNICAL_REVIEW.md).
 4. Telefonabläufe, Senderwechsel und Gate in Extremstellungen anhören.
 5. Mehrere Instanzen/Fenster öffnen, verschieden einstellen, schließen und erneut öffnen.
 6. Kleine/große Audiopuffer, Offline-Export, Projekt-Neuladen und Abtastratenwechsel testen.
-7. Live-Monitoring beurteilen: Der konstante Vorlauf gilt jetzt in allen Modi.
+7. Live-Monitoring: Nur Funk hat Vorlauf; Radio/Telefon und deren Bypass müssen unverzögert sein.
 
 Kein Merge und keine Veröffentlichung im Rahmen dieser Überarbeitung.

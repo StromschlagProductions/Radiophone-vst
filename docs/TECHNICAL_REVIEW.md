@@ -37,21 +37,32 @@ externen `malloc`-Aufrufe. Der eigene Audiopfad verwendet keine solchen Aufrufe.
 
 ## Architekturentscheidungen
 
-### Konstante Latenz
+### Modusabhängige Latenz
 
-Alle Modi verwenden denselben Vorlauf: `lround(0.03f * sampleRate)` Samples.
-Das erhält die bisherige Funk-Rundung (bei 22.050 Hz: 661 Samples). Radio/Telefon
-bekommen zusätzlich diesen Vorlauf. Die Änderung ist absichtlich dokumentiert: Ein
-Timer würde die Hostmeldung vom Audiowechsel entkoppeln und vorübergehend falsche PDC
-melden; `triggerAsyncUpdate` kann wiederum eine OS-Nachricht aus dem Callback erzeugen.
+Wie in 1.3: Funk verwendet `lround(0.03f * sampleRate)` Samples Vorlauf
+(bei 22.050 Hz: 661 Samples), Radio und Telefon verwenden 0 Samples.
+Keine zusätzliche Verzögerung in Radio oder Telefon. Der Vorlauf-Ringpuffer wird
+weitergeschrieben, damit ein Wechsel die Historie nicht löscht.
 
-`setLatencySamples` ruft in JUCE 8.0.9 bei Änderung synchron `updateHostDisplay` mit
-`latencyChanged` auf. Es steht hier ausschließlich in `prepareToPlay`, niemals in der
-Verarbeitung. Ein Editor oder Message-Timer wird für die Latenz nicht benötigt.
-Abtastratenwechsel bereiten alle Puffer neu vor. `processBlockBypassed` gibt das um exakt
-diese Samplezahl verzögerte Originalsignal aus; ein kurzer Mixübergang vermeidet harte
-Bypass-Kanten. Die Engine läuft dabei weiter, damit Wiedereinschalten nicht mit veralteten
-Zuständen beginnt. Bypass ist somit bewusst kein CPU-Sparmodus.
+`setLatencySamples` ruft in JUCE 8.0.9 synchron `updateHostDisplay` mit
+`latencyChanged` auf. Der Audio-Thread schreibt deshalb nur die tatsächliche
+Engine-Latenz in ein atomares Postfach. Ein pro Prozessor laufender 30-Hz-JUCE-Timer
+liest den neuesten Wert und meldet ihn auf dem Message-Thread. Keine
+`triggerAsyncUpdate`- oder Host-Aufrufe aus dem Callback; kein Editor erforderlich.
+Schnelle Wechsel werden auf den zuletzt verarbeiteten Wert zusammengefasst.
+Prepare meldet den anfänglichen Modus direkt, auch bei State-Restore vor Prepare.
+
+Bewusste Grenze: Nach einem Moduswechsel während laufender Wiedergabe kann die
+Hostmeldung mindestens bis zum nächsten Timer-Aufruf verzögert sein (bei blockiertem
+Message-Thread länger); bis zur Host-Neuberechnung kann PDC vorübergehend abweichen.
+Eine blockierende Host-Neukonfiguration wird nicht im Audio-Thread erzwungen.
+Der vorgesehene Einsatz ist die Wahl des Modus vor der Wiedergabe, kein nahtloser
+Wechsel zwischen Funk und den verzögerungsfreien Modi während einer Performance.
+
+`processBlockBypassed` verwendet dieselbe modusabhängige Verzögerung: Funk-Vorlauf,
+Radio/Telefon unverzögert. Die vorreservierten Stereo-Ringpuffer werden kontinuierlich
+gefüllt, ohne Moduswechsel-Allokationen. Ein kurzer Mixübergang glättet Bypass-Wechsel;
+die Engine läuft weiter und erhält ihre Zustände. Bypass ist kein CPU-Sparmodus.
 
 ### Blockgrößen
 

@@ -63,6 +63,7 @@ RadiophoneProcessor::RadiophoneProcessor()
     pDial = apvts.getRawParameterValue ("dial");
     pIntf = apvts.getRawParameterValue ("intf");
     loadSamples();
+    startTimerHz (30);
 }
 
 #if RPH_HAS_SAMPLES
@@ -106,12 +107,19 @@ void RadiophoneProcessor::prepareToPlay (double sampleRate, int maxBlock)
     engine.setSamples (rawSamples);
     mono.assign ((size_t) juce::jmax (maxBlock, 4096), 0.0f);
     for (auto& channel : dryDelay)
-        channel.assign ((size_t) engine.latencySamples() + 1, 0.0f);
+        channel.assign ((size_t) rph::Engine::latencyFor (rph::kFunk, sampleRate) + 1, 0.0f);
+    engine.setMode (juce::roundToInt (pMode->load()));
     dryPosition = 0;
     bypassMix = 0.0f;
     bypassStep = 1.0f / (0.005f * (float) (std::isfinite (sampleRate) && sampleRate >= 1000.0 ? sampleRate : 44100.0));
-    // Constant latency avoids host restart messages and PDC races during automation.
+    pendingLatency.store (engine.latencySamples());
     setLatencySamples (engine.latencySamples());
+}
+
+void RadiophoneProcessor::timerCallback()
+{
+    // Polling posts no OS messages from the audio callback; works without an editor.
+    setLatencySamples (pendingLatency.load (std::memory_order_acquire));
 }
 
 bool RadiophoneProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
@@ -178,6 +186,8 @@ void RadiophoneProcessor::process (juce::AudioBuffer<float>& buffer, bool bypass
                 m[i] += (std::isfinite (src[i]) ? src[i] : 0.0f) / (float) numIn;
         }
         engine.process (m, count, p);
+        const int latency = engine.latencySamples();
+        pendingLatency.store (latency, std::memory_order_release);
         for (int i = 0; i < count; ++i)
         {
             bypassMix += juce::jlimit (-bypassStep, bypassStep,
@@ -188,7 +198,7 @@ void RadiophoneProcessor::process (juce::AudioBuffer<float>& buffer, bool bypass
             {
                 const float input = buffer.getSample (ch, offset + i);
                 dryDelay[ch][(size_t) dryPosition] = std::isfinite (input) ? input : 0.0f;
-                dry[ch] = dryDelay[ch][(size_t) read];
+                dry[ch] = latency == 0 ? dryDelay[ch][(size_t) dryPosition] : dryDelay[ch][(size_t) read];
             }
             for (int ch = 0; ch < numCh; ++ch)
                 buffer.setSample (ch, offset + i, m[i] + bypassMix * (dry[numIn == 1 ? 0 : juce::jmin (ch, 1)] - m[i]));

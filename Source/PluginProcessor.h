@@ -2,11 +2,11 @@
 #include <juce_audio_utils/juce_audio_utils.h>
 #include "RadiophoneDSP.h"
 
-class RadiophoneProcessor : public juce::AudioProcessor
+class RadiophoneProcessor : public juce::AudioProcessor, private juce::Timer
 {
 public:
     RadiophoneProcessor();
-    ~RadiophoneProcessor() override = default;
+    ~RadiophoneProcessor() override { stopTimer(); }
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override {}
@@ -48,6 +48,8 @@ public:
 private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
     rph::Engine engine;
+    void timerCallback() override;
+    std::atomic<int> pendingLatency { 0 };
     void process (juce::AudioBuffer<float>&, bool bypassed);
     std::vector<float> dryDelay[2];
     int dryPosition = 0;

@@ -30,11 +30,13 @@ int main()
     {
         if (in > out) continue;
         RadiophoneProcessor p; layout (p, in, out); p.prepareToPlay (fs, 32);
-        const auto latency = p.getLatencySamples();
+        auto latency = p.getLatencySamples();
         CHECK (latency == rph::Engine::latencyFor (0, fs));
         for (int mode = 0; mode < 3; ++mode)
         {
             parameter (p, "mode", (float) mode); parameter (p, "key", 1);
+            p.prepareToPlay (fs, 32);
+            latency = rph::Engine::latencyFor (mode, fs);
             for (int n : { 0, 1, 3, 32, 4096, 4097, 65537, 7 })
             {
                 juce::AudioBuffer<float> b (out, n); fill (b);
@@ -47,6 +49,10 @@ int main()
                 }
             }
         }
+        for (int mode = 0; mode < 3; ++mode)
+        {
+            parameter (p, "mode", (float) mode); p.prepareToPlay (fs, 32);
+            latency = rph::Engine::latencyFor (mode, fs);
         // Bypass is delayed by exactly the declared latency, including oversized blocks.
         juce::AudioBuffer<float> warm (out, 8192); warm.clear(); p.processBlockBypassed (warm, midi);
         p.reset(); juce::AudioBuffer<float> impulse (out, latency + 500); impulse.clear();
@@ -55,7 +61,19 @@ int main()
         for (int c = 0; c < out; ++c)
             for (int i = 0; i < impulse.getNumSamples(); ++i)
                 CHECK (std::abs (impulse.getSample (c, i) - (i == latency ? 0.5f : 0.0f)) < 1e-6f);
+        }
     }
+    // Audio changes latency immediately; editor-independent processor timer informs the host.
+    RadiophoneProcessor latencyA, latencyB;
+    latencyA.prepareToPlay (48000, 32); parameter (latencyB, "mode", 1); latencyB.prepareToPlay (48000, 32);
+    CHECK (latencyA.getLatencySamples() == 1440 && latencyB.getLatencySamples() == 0);
+    juce::AudioBuffer<float> change (2, 64); change.clear();
+    parameter (latencyA, "mode", 2); latencyA.processBlock (change, midi);
+    juce::MessageManager::getInstance()->runDispatchLoopUntil (100);
+    CHECK (latencyA.getLatencySamples() == 0 && latencyB.getLatencySamples() == 0);
+    parameter (latencyA, "mode", 0); latencyA.processBlock (change, midi);
+    juce::MessageManager::getInstance()->runDispatchLoopUntil (100);
+    CHECK (latencyA.getLatencySamples() == 1440 && latencyB.getLatencySamples() == 0);
     // Processor partition equivalence catches offset/downmix/copy errors in chunking.
     RadiophoneProcessor a, b; a.prepareToPlay (48000, 16); b.prepareToPlay (48000, 16);
     parameter (a, "key", 1); parameter (b, "key", 1);

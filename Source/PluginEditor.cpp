@@ -74,7 +74,7 @@ static juce::AttributedString buildHelp (juce::Colour text, juce::Colour accent,
     body ("Lautst\xc3\xa4rke aller eingebauten Ger\xc3\xa4usche: Squelch, Rauschen, Knacken, Senderwechsel und Telefont\xc3\xb6ne. Die Stimme bleibt davon unber\xc3\xbchrt.");
 
     head ("Allgemein");
-    body ("Das Plugin meldet in allen Modi 30 ms Latenz. So bleiben Moduswechsel zeitlich stabil. Im Funk liegt das Tschk vor dem ersten Wort. Die DAW gleicht die Latenz automatisch aus.");
+    body ("Nur Funk hat rund 30 ms Vorlauf, damit das Tschk vor dem ersten Wort liegt. Radio und Telefon haben 0 ms Plugin-Latenz. Die DAW gleicht den Funk-Vorlauf aus. Den Modus vor der Wiedergabe einstellen.");
     body ("Doppelklick auf einen Drehregler setzt ihn zur\xc3\xbc\x63k. Look: Dunkel / Hell, das Fenster ist am rechten unteren Rand skalierbar (50\xe2\x80\x93\x33\x30\x30 %).");
 
     head ("Idee und Konzept");

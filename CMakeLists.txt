@@ -68,6 +68,7 @@ target_sources(Radiophone PRIVATE
 
 target_compile_definitions(Radiophone PUBLIC
     PLUGIN_VERSION_TEXT="${RPH_VERSION}"
+    JUCE_MODAL_LOOPS_PERMITTED=1
     JUCE_WEB_BROWSER=0
     JUCE_USE_CURL=0
     JUCE_VST3_CAN_REPLACE_VST2=0

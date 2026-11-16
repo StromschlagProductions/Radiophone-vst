@@ -29,7 +29,7 @@ static void run (double fs)
             pos += n;
         }
         CHECK (whole == split); finite (whole);
-        CHECK (a.latencySamples() == (int) std::lround (rph::Engine::kLookaheadSec * fs));
+        CHECK (a.latencySamples() == rph::Engine::latencyFor (mode, fs));
         a.reset(); auto again = signal (65537, fs);
         a.process (again.data(), (int) again.size(), p); CHECK (whole == again);
     }
