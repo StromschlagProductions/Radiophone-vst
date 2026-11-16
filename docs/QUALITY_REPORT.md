@@ -26,8 +26,45 @@ hinaus ausklingen. Zufällige Radio-Geräusche nach Senderwechseln sind nicht bi
 
 ## Validierung
 
-Messwerte und endgültige Build-/Testergebnisse werden nach Abschluss der Prüfungen
-in diesem Bericht ergänzt. Testumfang und Befehle: [Technische Prüfung](TECHNICAL_REVIEW.md).
+Geprüfter Code: `f3ae6a17f497ee383a8708eb20828d7c7034fd3e`.
+
+- Windows-x64-VST3-Build erfolgreich; beide CTest-Suites und `pluginval` Stufe 8 bestanden.
+  [Windows-CI](https://github.com/StromschlagProductions/Radiophone-vst/actions/runs/43821308238).
+  Release-Schritt wurde übersprungen.
+- [Sanitizer-CI](https://github.com/StromschlagProductions/Radiophone-vst/actions/runs/43821308303):
+  AddressSanitizer/UndefinedBehaviorSanitizer sowie ThreadSanitizer bestanden.
+- Lokale DSP- und Prozessor-Regressionstests bestanden: fünf Abtastraten (22.050–192.000 Hz),
+  Mono/Mono→Stereo/Stereo, Blöcke 0–65.537 Samples, wechselnde Größen, schnelle Modi,
+  Extremwerte, C++-Allokationskontrolle, State-Restore, Bypass-Latenz und unabhängige Instanzen.
+  GUI-Lebensdauerprüfung mit mehrfacher Konstruktion/Zerstörung ohne native Fenster-Peers.
+- Unveränderter Referenzstand erfolgreich als Linux-VST3 gebaut; Linux-pluginval Stufe 8 bestanden.
+- `Tests/Render.cpp`: selbst erzeugtes Zweitonsignal, Stimme ohne Geräusche, 48 kHz.
+  Nach 5.000 Einschwing-Samples und Ausgleich des zusätzlichen Vorlaufs maximale
+  Sampleabweichung **0** in allen drei Modi. Keine Aussage über sämtliche Signale,
+  Übergänge oder zufällige Geräusche und kein subjektiver Hörtest.
+
+### Performance
+
+Debian 13 x86_64, GCC 14.2, `-O3`, Intel Xeon Platinum 8573C, Container mit zwei
+CPU-Kernen Kontingent. Fünf Läufe je Version in wechselnder Reihenfolge, Median der
+Prozess-CPU-Zeit (`std::clock`), je Fall 2.560.000 Samples bei 48 kHz, FTZ/DAZ aktiv.
+Ein- und Ausgangserzeugung sind mitgemessen; keine DAW-CPU-Prozentangaben.
+
+| Fall | vorher (ms CPU) | nachher (ms CPU) | Änderung |
+|---|---:|---:|---:|
+| Funk geschlossen / Stille | 366.06 | 279.35 | -23.7 % |
+| Funk offen / Stille | 368.17 | 279.01 | -24.2 % |
+| Funk offen / Sinus | 402.38 | 392.55 | -2.4 % |
+| Radio / Senderwechselaufnahme | 664.27 | 513.59 | -22.7 % |
+| Moduswechsel alle 256 Samples | 473.92 | 524.26 | +10.6 % |
+
+Stille und aufgenommene Senderwechsel benötigen im Test deutlich weniger CPU.
+Sehr häufige Moduswechsel kosten durch die neue Filterglättung etwa 11 % mehr CPU;
+das ist der bewusst dokumentierte Preis der verbesserten Übergänge. Die Zahlen sind
+Engine-Messungen und kein Nachweis geringerer maximaler Callback-Zeiten im Vollplugin.
+Die vollständigen Rohmesswerte stehen in `docs/benchmark-results.json`.
+
+Testumfang und Befehle: [Technische Prüfung](TECHNICAL_REVIEW.md).
 
 ## Selbst in Fender Studio Pro prüfen
 
