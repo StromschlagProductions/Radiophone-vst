@@ -27,7 +27,7 @@ hinaus ausklingen. Zufällige Radio-Geräusche nach Senderwechseln sind nicht bi
 ## Validierung
 
 Die folgenden CI-Messungen beziehen sich auf `f3ae6a17f497ee383a8708eb20828d7c7034fd3e`
-vor der Rückkehr zu modusabhängiger Latenz. Neue Testergebnisse folgen unten.
+vor der Rückkehr zu modusabhängiger Latenz. Die aktualisierte Prüfung steht unten.
 
 - Windows-x64-VST3-Build erfolgreich; beide CTest-Suites und `pluginval` Stufe 8 bestanden.
   [Windows-CI](https://github.com/StromschlagProductions/Radiophone-vst/actions/runs/43821308238).
@@ -66,6 +66,27 @@ Engine-Messungen und kein Nachweis geringerer maximaler Callback-Zeiten im Vollp
 Die vollständigen Rohmesswerte stehen in `docs/benchmark-results.json`.
 
 Testumfang und Befehle: [Technische Prüfung](TECHNICAL_REVIEW.md).
+
+### Aktualisierte Prüfung nach Rücknahme der zusätzlichen Latenz
+
+Code: `da7784ebe57aec7ed17ed38f12e60e640758debf`.
+
+- Linux-VST3-Build erfolgreich; DSP- und Prozessor-CTest bestanden.
+- Linux `pluginval --strictness-level 8 --validate-in-process` bestanden.
+- Sanitizer-CI (ASan/UBSan und TSan) bestanden:
+  [Lauf](https://github.com/StromschlagProductions/Radiophone-vst/actions/runs/43921516343).
+- Zusätzliche Tests: Prepare mit jedem Modus; Bypass-Impulse bei allen fünf Abtastraten
+  in allen drei Modi; Hostmeldung per Message-Timer ohne Editor und mit unabhängiger
+  zweiter Instanz. Funk hat Vorlauf, Radio/Telefon geben den Bypass-Impuls bei Sample 0 aus.
+- Zweitonsignal erneut mit 1.3 verglichen: maximale Sampleabweichung nach 5.000
+  Einschwing-Samples **0** in allen Modi, diesmal ohne zusätzlichen Zeitversatz.
+- Die neue Windows-CI läuft separat:
+  [Lauf](https://github.com/StromschlagProductions/Radiophone-vst/actions/runs/43921516316).
+  Der vorherige Windows-Erfolg ist kein Testergebnis des neuen Codes.
+- Die Performance-Tabelle oben gehört zum vorherigen Stand; nach der Latenzrücknahme
+  wurde sie nicht erneut gemessen. Die entfernte redundante Synthese und die weiteren
+  Optimierungen bleiben im Code enthalten.
+
 
 ## Selbst in Fender Studio Pro prüfen
 
