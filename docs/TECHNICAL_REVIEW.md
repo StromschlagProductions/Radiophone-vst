@@ -77,7 +77,9 @@ Das ausgeschaltete Voice-Gate war bereits bedingt ausgeführt; ein angeblicher s
 laufender Gate-Hüllkurvenpfad wurde **nicht** bestätigt. Die übrige Klangkette bleibt aktiv,
 um Filterzustände und Wiederöffnung zu erhalten. Neu: keine Kompressor-Logarithmen unter
 der Schwelle, quadrierte Detektorschwellen statt Quadratwurzel, keine parallele
-Synthese beim Abspielen der Senderwechselaufnahme. Das verändert den Verbrauch des
+Synthese beim Abspielen der Senderwechselaufnahme. Hüllkurven-Zeitkonstanten werden bei
+Prepare berechnet; bei exakt null überspringt die zustandslose Sättigung ihre Sinusfunktionen.
+Unveränderte Filterziele starten keine neue Koeffizientenrampe. Das verändert den Verbrauch des
 Zufallszahlengenerators beim Senderwechsel; späteres zufälliges Rauschen ist daher nicht
 bitidentisch. Voicings, Schwellen, Sättigung und Geräuschaufnahmen bleiben erhalten.
 `ScopedNoDenormals` schützt den JUCE-Callback; Standalone-DSP-Tests setzen FTZ/DAZ selbst.
@@ -105,10 +107,10 @@ Sanitizer-CI prüft die unabhängige Engine. Releases erfordern jetzt ausdrückl
 `workflow_dispatch` mit `publish=true` auf `main`; PRs erzeugen keine Releases.
 
 `Tests/Benchmark.cpp` kann unverändert gegen den ursprünglichen und neuen DSP-Header
-kompiliert werden (`g++ -O3 -std=c++17 -I<Source> Tests/Benchmark.cpp`). Vier Fälle:
+kompiliert werden (`g++ -O3 -std=c++17 -I<Source> Tests/Benchmark.cpp`). Fünf Fälle:
 geschlossener Funk bei Stille, offener Funk bei Stille, offener Funk mit Sinus und Radio
-mit wiederholt gestarteter Testaufnahme. Je Fall 10.000 × 256 Samples bei 48 kHz.
-Eingangserzeugung ist mitgemessen. Kein DAW- oder Vollplugin-CPU-Benchmark.
+mit wiederholt gestarteter Testaufnahme sowie Moduswechsel nach jedem Block. Je Fall 10.000 × 256 Samples bei 48 kHz.
+Gemessen wird unter Linux die Prozess-CPU-Zeit (`std::clock`). Eingangserzeugung ist mitgemessen. Kein DAW- oder Vollplugin-CPU-Benchmark.
 
 ## Grenzen
 

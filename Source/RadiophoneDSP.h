@@ -28,6 +28,7 @@ struct Biquad
 {
     double b0 = 1, b1 = 0, b2 = 0, a1 = 0, a2 = 0, z1 = 0, z2 = 0;
     double target[5] { 1, 0, 0, 0, 0 };
+    double step[5] {};
     int smoothing = 0;
     bool initialised = false;
 
@@ -36,9 +37,11 @@ struct Biquad
     {
         if (smoothing > 0)
         {
-            const double t = 1.0 / smoothing--;
-            b0 += (target[0] - b0) * t; b1 += (target[1] - b1) * t; b2 += (target[2] - b2) * t;
-            a1 += (target[3] - a1) * t; a2 += (target[4] - a2) * t;
+            b0 += step[0]; b1 += step[1]; b2 += step[2]; a1 += step[3]; a2 += step[4];
+            if (--smoothing == 0)
+            {
+                b0 = target[0]; b1 = target[1]; b2 = target[2]; a1 = target[3]; a2 = target[4];
+            }
         }
         const double y = b0 * x + z1;
         z1 = b1 * x - a1 * y + z2;
@@ -86,12 +89,20 @@ struct Band
         {
             auto& f = *filters[i];
             const double target[] { f.b0, f.b1, f.b2, f.a1, f.a2 };
+            if (previous[i].initialised && std::equal (target, target + 5, previous[i].target))
+            {
+                f = previous[i]; // unrelated parameter changes do not restart a settled filter
+                continue;
+            }
             if (f.initialised)
             {
                 f = previous[i];
                 std::copy (target, target + 5, f.target);
                 f.smoothing = std::max (1, (int) (0.005 * fs));
+                const double current[] { f.b0, f.b1, f.b2, f.a1, f.a2 };
+                for (int c = 0; c < 5; ++c) f.step[c] = (target[c] - current[c]) / f.smoothing;
             }
+            std::copy (target, target + 5, f.target);
             f.initialised = true;
         }
     }
@@ -112,6 +123,7 @@ struct Rng
 // Airwindows Density (Chris Johnson, MIT): Sinus-Saettigung, ganze Stufen voll, Rest gemischt
 inline float density (float x, float amount)
 {
+    if (x == 0.0f) return x; // exact silence: no nonlinear state to advance
     auto stage = [] (float v)
     {
         float b = std::min (std::abs (v) * kHalfPi, kHalfPi);
@@ -224,6 +236,10 @@ public:
         lookahead = (int) std::lround (kLookaheadSec * fs);
         delay.assign ((size_t) lookahead + 1, 0.0f);
         curLookahead = lookahead;
+        compAtt = coef (0.004f); compRel = coef (0.120f); detCoef = coef (0.010f);
+        gAtt = coef (0.0005f); gRel = coef (0.012f);
+        rampOpen = 1.0f / (0.004f * (float) fs); rampClose = 1.0f / (0.002f * (float) fs);
+        gateRamp = 1.0f / (0.0012f * (float) fs);
         configured = false;
         reset();
     }
@@ -278,11 +294,6 @@ public:
         const float sfx = dbToLin (p.sfxDb);
         const float hiss = dbToLin (v.hissDb);
         const float gateThr = p.gate > 0.001f ? dbToLin (-52.0f + 34.0f * p.gate) : 0.0f;
-        const float compAtt = coef (0.004f), compRel = coef (0.120f);
-        const float detCoef = coef (0.010f);
-        const float gAtt = coef (0.0005f), gRel = coef (0.012f);
-        const float rampOpen = 1.0f / (0.004f * (float) fs), rampClose = 1.0f / (0.002f * (float) fs);
-        const float gateRamp = 1.0f / (0.0012f * (float) fs);
         const int pauseSamples = (int) (p.pauseSec * fs);
         const float detOpen = dbToLin (-44.0f), detQuiet = dbToLin (-50.0f);
         const float compThreshold = dbToLin (v.compThrDb);
@@ -767,6 +778,8 @@ private:
     bool configured = false;
     int lastMode = -1, lastDevice = -1;
 
+    float compAtt = 0, compRel = 0, detCoef = 0, gAtt = 0, gRel = 0;
+    float rampOpen = 0, rampClose = 0, gateRamp = 0;
     float compEnv = 0, detEnv = 0, gateEnv = 0;
     float voiceGain = 0, voiceTarget = 0, gateGain = 1;
 

@@ -6,6 +6,7 @@ on:
     paths-ignore: ['docs/**', 'README.md']   # Doku-Aenderungen loesen keinen neuen Bau aus
   pull_request:
     branches: [main]
+    paths-ignore: ['docs/**', 'README.md']
   workflow_dispatch:
     inputs:
       publish:
