@@ -124,7 +124,7 @@ Die Versionsnummer steht in der Datei `VERSION`, im Plugin-Kopf und im Namen der
 
 - `Source/RadiophoneDSP.h`: Klang-Engine (reines C++). Die Klangwerte je Gerät stehen oben in `voicing()`.
 - `Source/PluginProcessor.*`, `Source/PluginEditor.*`: JUCE-Plugin und Oberfläche
-- `.github/workflows/build.yml`: Windows-Bau, Regressionstests und pluginval; Releases nur nach explizitem Workflow-Start mit `publish`
+- `.github/workflows/build.yml`: Windows-Bau, Regressionstests und pluginval; Releases nur nach explizitem Workflow-Start mit `publish`, siehe [docs/CI.md](docs/CI.md)
 
 ## Danke
 

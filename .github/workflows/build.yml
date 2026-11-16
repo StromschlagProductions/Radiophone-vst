@@ -1,12 +1,12 @@
 name: Windows-VST3 bauen
 
+# Sparsamer Betrieb (GitHub-Actions-Kontingent, Windows-Minuten zaehlen doppelt):
+# - Kein Lauf mehr bei jedem Push oder PR-Update. Entwickelt und getestet wird lokal.
+# - Der Windows-Bau mit Regressionstests und pluginval (Strictness 8) laeuft auf Anforderung als Abnahme:
+#   GitHub -> Actions -> "Windows-VST3 bauen" -> "Run workflow".
+# - Ein Release entsteht nur, wenn "publish" angehakt wird (Standard: aus), nur auf main.
+# Beschreibung: docs/CI.md
 on:
-  push:
-    branches: [main]
-    paths-ignore: ['docs/**', 'README.md']   # Doku-Aenderungen loesen keinen neuen Bau aus
-  pull_request:
-    branches: [main]
-    paths-ignore: ['docs/**', 'README.md']
   workflow_dispatch:
     inputs:
       publish:
@@ -14,13 +14,17 @@ on:
         type: boolean
         default: false
 
+concurrency:
+  group: windows-vst3-${{ github.ref }}
+  cancel-in-progress: ${{ ! inputs.publish }}
+
 permissions:
   contents: write
 
 jobs:
   build:
     runs-on: windows-latest
-    timeout-minutes: 45
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -29,6 +33,7 @@ jobs:
         run: |
           $v = (Get-Content VERSION -TotalCount 1).Trim()
           "RPH_VERSION=$v" >> $env:GITHUB_ENV
+          if ("${{ inputs.publish }}" -eq "true" -and "${{ github.ref }}" -ne "refs/heads/main") { Write-Error "Release nur auf main"; exit 1 }
 
       - name: Konfigurieren
         run: cmake -B build -A x64
@@ -45,6 +50,7 @@ jobs:
           name: Radiophone-VST3-Windows
           path: build/Radiophone_artefacts/Release/VST3
           if-no-files-found: error
+          retention-days: 7
 
       - name: Stabilitaetstest (pluginval)
         shell: pwsh
@@ -59,7 +65,7 @@ jobs:
         run: Compress-Archive -Path "build/Radiophone_artefacts/Release/VST3/Radiophone.vst3" -DestinationPath "Radiophone-VST3-Windows.zip"
 
       - name: Release mit ZIP erstellen
-        if: github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main'
+        if: inputs.publish && github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.RPH_VERSION }}-b${{ github.run_number }}

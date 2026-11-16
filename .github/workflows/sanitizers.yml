@@ -1,15 +1,21 @@
 name: DSP sanitizers
+# Guenstiger Linux-Lauf (ohne JUCE): nur bei Code-/Testaenderungen, nicht bei Doku. Siehe docs/CI.md
 on:
   pull_request:
-    paths-ignore: ['docs/**', 'README.md']
+    types: [opened, ready_for_review]
+    paths: ['Source/**', 'Tests/**', 'CMakeLists.txt', 'VERSION', '.github/workflows/sanitizers.yml']
   push:
     branches: [main]
-    paths-ignore: ['docs/**', 'README.md']
+    paths: ['Source/**', 'Tests/**', 'CMakeLists.txt', 'VERSION', '.github/workflows/sanitizers.yml']
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: dsp-sanitizers-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   dsp:
+    if: github.event_name != 'pull_request' || ! github.event.pull_request.draft
     runs-on: ubuntu-latest
     strategy:
       matrix:
