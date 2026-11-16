@@ -105,9 +105,13 @@ void RadiophoneProcessor::prepareToPlay (double sampleRate, int maxBlock)
     engine.prepare (sampleRate);
     engine.setSamples (rawSamples);
     mono.assign ((size_t) juce::jmax (maxBlock, 4096), 0.0f);
-    engine.setMode (juce::roundToInt (pMode->load()));
-    reportedLatency = engine.latencySamples();
-    setLatencySamples (reportedLatency.load());   // nur im Funkmodus: Vorlauf fuer das Tschk, gleicht der Host aus
+    for (auto& channel : dryDelay)
+        channel.assign ((size_t) engine.latencySamples() + 1, 0.0f);
+    dryPosition = 0;
+    bypassMix = 0.0f;
+    bypassStep = 1.0f / (0.005f * (float) (std::isfinite (sampleRate) && sampleRate >= 1000.0 ? sampleRate : 44100.0));
+    // Constant latency avoids host restart messages and PDC races during automation.
+    setLatencySamples (engine.latencySamples());
 }
 
 bool RadiophoneProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
@@ -122,65 +126,101 @@ bool RadiophoneProcessor::isBusesLayoutSupported (const BusesLayout& layouts) co
 
 void RadiophoneProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
 {
+    process (buffer, false);
+}
+
+void RadiophoneProcessor::processBlockBypassed (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
+{
+    process (buffer, true);
+}
+
+void RadiophoneProcessor::reset()
+{
+    engine.reset();
+    for (auto& channel : dryDelay) std::fill (channel.begin(), channel.end(), 0.0f);
+    dryPosition = 0;
+}
+
+void RadiophoneProcessor::process (juce::AudioBuffer<float>& buffer, bool bypassed)
+{
     juce::ScopedNoDenormals noDenormals;
     const int numSamples = buffer.getNumSamples();
     const int numCh = buffer.getNumChannels();
     const int numIn = juce::jmin (getTotalNumInputChannels(), numCh);
     if (numSamples == 0 || numCh == 0)
         return;
-    if ((int) mono.size() < numSamples)
-        mono.resize ((size_t) numSamples);   // sollte nie passieren (Host haelt sich an die Blockgroesse)
+    if (mono.empty()) { buffer.clear(); return; } // defensive: host called before prepare
 
     rph::Params p;
-    p.mode = juce::roundToInt (pMode->load());
-    p.device = juce::roundToInt (pDevice->load());
-    p.key = juce::roundToInt (pKey->load());
+    auto choice = [] (float value, int maximum)
+    { return std::isfinite (value) ? juce::roundToInt (juce::jlimit (0.0f, (float) maximum, value)) : 0; };
+    p.mode = choice (pMode->load(), 2);
+    p.device = choice (pDevice->load(), 2);
+    p.key = choice (pKey->load(), 2);
     p.pauseSec = pPause->load();
     p.gate = pGate->load();
     p.sfxDb = pSfx->load();
     p.tuneCount = pTune->load() > 0.5f ? 1 : 0;   // jede Aenderung loest einen Senderwechsel aus
-    p.line = juce::roundToInt (pLine->load());
-    p.dialType = juce::roundToInt (pDial->load());
+    p.line = choice (pLine->load(), 5);
+    p.dialType = choice (pDial->load(), 1);
     p.interference = pIntf->load();
 
-    // Funk, Radio und Telefon sind mono: Eingang zusammenmischen
-    float* m = mono.data();
-    std::fill (m, m + numSamples, 0.0f);
-    if (numIn > 0)
+    // A bounded work buffer handles arbitrary host blocks without resizing.
+    for (int offset = 0; offset < numSamples;)
     {
-        const float g = 1.0f / (float) numIn;
+        const int count = juce::jmin ((int) mono.size(), numSamples - offset);
+        float* m = mono.data();
+        std::fill (m, m + count, 0.0f);
         for (int ch = 0; ch < numIn; ++ch)
         {
-            const float* src = buffer.getReadPointer (ch);
-            for (int i = 0; i < numSamples; ++i)
-                m[i] += src[i] * g;
+            const auto* src = buffer.getReadPointer (ch, offset);
+            for (int i = 0; i < count; ++i)
+                m[i] += (std::isfinite (src[i]) ? src[i] : 0.0f) / (float) numIn;
         }
+        engine.process (m, count, p);
+        for (int i = 0; i < count; ++i)
+        {
+            bypassMix += juce::jlimit (-bypassStep, bypassStep,
+                                      (bypassed ? 1.0f : 0.0f) - bypassMix);
+            const int read = dryPosition + 1 == (int) dryDelay[0].size() ? 0 : dryPosition + 1;
+            float dry[2] {};
+            for (int ch = 0; ch < juce::jmin (numIn, 2); ++ch)
+            {
+                const float input = buffer.getSample (ch, offset + i);
+                dryDelay[ch][(size_t) dryPosition] = std::isfinite (input) ? input : 0.0f;
+                dry[ch] = dryDelay[ch][(size_t) read];
+            }
+            for (int ch = 0; ch < numCh; ++ch)
+                buffer.setSample (ch, offset + i, m[i] + bypassMix * (dry[numIn == 1 ? 0 : juce::jmin (ch, 1)] - m[i]));
+            dryPosition = read;
+        }
+        offset += count;
     }
-
-    engine.process (m, numSamples, p);
-    if (engine.latencySamples() != reportedLatency.load())
-    {
-        reportedLatency = engine.latencySamples();   // Moduswechsel: Host ueber neue Latenz informieren
-        triggerAsyncUpdate();
-    }
-    transmitting.store (engine.isTransmitting());
-    tuning.store (engine.isTuning());
-
-    for (int ch = 0; ch < numCh; ++ch)
-        buffer.copyFrom (ch, 0, m, numSamples);
+    transmitting.store (engine.isTransmitting(), std::memory_order_relaxed);
+    tuning.store (engine.isTuning(), std::memory_order_relaxed);
 }
 
 void RadiophoneProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    if (auto xml = apvts.copyState().createXml())
+    auto state = apvts.copyState();
+    state.setProperty ("theme", uiTheme.load(), nullptr);
+    state.setProperty ("uiW", uiWidth.load(), nullptr);
+    state.setProperty ("uiH", uiHeight.load(), nullptr);
+    if (auto xml = state.createXml())
         copyXmlToBinary (*xml, destData);
 }
 
 void RadiophoneProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     if (auto xml = getXmlFromBinary (data, sizeInBytes))
-        if (xml->hasTagName (apvts.state.getType()))
-            apvts.replaceState (juce::ValueTree::fromXml (*xml));
+        if (xml->hasTagName ("RADIOPHONE"))
+        {
+            auto state = juce::ValueTree::fromXml (*xml);
+            uiTheme.store ((int) state.getProperty ("theme", 0));
+            uiWidth.store (juce::jlimit (340, 2040, (int) state.getProperty ("uiW", 680)));
+            uiHeight.store (juce::jlimit (210, 1260, (int) state.getProperty ("uiH", 420)));
+            apvts.replaceState (state);
+        }
 }
 
 juce::AudioProcessorEditor* RadiophoneProcessor::createEditor() { return new RadiophoneEditor (*this); }

@@ -4,9 +4,6 @@
 namespace
 {
 juce::String u8 (const char* s) { return juce::String (juce::CharPointer_UTF8 (s)); }
-const char* kThemeProp = "theme";   // 0 = dunkel, 1 = hell (wird mit dem Projekt gespeichert)
-const char* kUiWProp = "uiW";
-const char* kUiHProp = "uiH";
 
 // Kasten-Positionen unten (gleiches Raster in allen Modi)
 constexpr float kBoxY = 208.0f, kBoxH = 200.0f;
@@ -77,7 +74,7 @@ static juce::AttributedString buildHelp (juce::Colour text, juce::Colour accent,
     body ("Lautst\xc3\xa4rke aller eingebauten Ger\xc3\xa4usche: Squelch, Rauschen, Knacken, Senderwechsel und Telefont\xc3\xb6ne. Die Stimme bleibt davon unber\xc3\xbchrt.");
 
     head ("Allgemein");
-    body ("Nur im Funkmodus meldet das Plugin dem Host 30 ms Latenz (Vorlauf, damit das Tschk vor dem ersten Wort liegt). Radio und Telefon haben keine Latenz. Die DAW gleicht das automatisch aus.");
+    body ("Das Plugin meldet in allen Modi 30 ms Latenz. So bleiben Moduswechsel zeitlich stabil. Im Funk liegt das Tschk vor dem ersten Wort. Die DAW gleicht die Latenz automatisch aus.");
     body ("Doppelklick auf einen Drehregler setzt ihn zur\xc3\xbc\x63k. Look: Dunkel / Hell, das Fenster ist am rechten unteren Rand skalierbar (50\xe2\x80\x93\x33\x30\x30 %).");
 
     head ("Idee und Konzept");
@@ -95,7 +92,7 @@ RadiophoneEditor::RadiophoneEditor (RadiophoneProcessor& p) : AudioProcessorEdit
         c->setFixedAspectRatio ((double) kBaseW / (double) kBaseH);
 
     logo = juce::ImageCache::getFromMemory (BinaryData::logo_png, BinaryData::logo_pngSize);
-    theme = (int) processor.apvts.state.getProperty (kThemeProp, 0) == 1 ? lightTheme() : darkTheme();
+    theme = processor.uiTheme.load() == 1 ? lightTheme() : darkTheme();
     setLookAndFeel (&look);
 
     const auto modes = RadiophoneProcessor::modeNames();
@@ -150,7 +147,7 @@ RadiophoneEditor::RadiophoneEditor (RadiophoneProcessor& p) : AudioProcessorEdit
     themeButton.onClick = [this]
     {
         theme = theme.dark ? lightTheme() : darkTheme();
-        processor.apvts.state.setProperty (kThemeProp, theme.dark ? 0 : 1, nullptr);
+        processor.uiTheme.store (theme.dark ? 0 : 1);
         applyTheme();
     };
     content.addAndMakeVisible (themeButton);
@@ -168,8 +165,8 @@ RadiophoneEditor::RadiophoneEditor (RadiophoneProcessor& p) : AudioProcessorEdit
     applyTheme();
     updateModeVisibility();
 
-    const int savedW = (int) processor.apvts.state.getProperty (kUiWProp, kBaseW);
-    const int savedH = (int) processor.apvts.state.getProperty (kUiHProp, kBaseH);
+    const int savedW = processor.uiWidth.load();
+    const int savedH = processor.uiHeight.load();
     setSize (juce::jlimit (kBaseW / 2, kBaseW * 3, savedW), juce::jlimit (kBaseH / 2, kBaseH * 3, savedH));
     sizeReady = true;
     startTimerHz (15);
@@ -209,6 +206,10 @@ void RadiophoneEditor::triggerTuning()
 
 void RadiophoneEditor::timerCallback()
 {
+    const bool wantsDark = processor.uiTheme.load() != 1;
+    if (theme.dark != wantsDark) { theme = wantsDark ? darkTheme() : lightTheme(); applyTheme(); }
+    const int savedW = processor.uiWidth.load(), savedH = processor.uiHeight.load();
+    if (getWidth() != savedW || getHeight() != savedH) setSize (savedW, savedH);
     const int m = currentMode();
     if (m != shownMode)
     {
@@ -228,7 +229,6 @@ void RadiophoneEditor::timerCallback()
         repaint();
     }
     // Funk-Statuszeile zeigt Automatik/Taste, darum bei Aenderungen nachziehen
-    static int lastKeyShown = -1;
     const int key = juce::roundToInt (processor.apvts.getRawParameterValue ("key")->load());
     if (key != lastKeyShown) { lastKeyShown = key; repaint(); }
 }
@@ -452,8 +452,8 @@ void RadiophoneEditor::resized()
 {
     if (sizeReady)
     {
-        processor.apvts.state.setProperty (kUiWProp, getWidth(), nullptr);
-        processor.apvts.state.setProperty (kUiHProp, getHeight(), nullptr);
+        processor.uiWidth.store (getWidth());
+        processor.uiHeight.store (getHeight());
     }
     uiScale = std::min ((float) getWidth() / kBaseW, (float) getHeight() / kBaseH);
     content.setTransform (juce::AffineTransform::scale (uiScale));

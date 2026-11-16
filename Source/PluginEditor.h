@@ -78,6 +78,7 @@ private:
     int shownMode = -1;
     bool lampOn = false;
     int lastLine = -1;
+    int lastKeyShown = -1;
 
     // Funk
     juce::ComboBox deviceBox, keyBox;

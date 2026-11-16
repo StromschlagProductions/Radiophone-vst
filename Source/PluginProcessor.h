@@ -2,17 +2,18 @@
 #include <juce_audio_utils/juce_audio_utils.h>
 #include "RadiophoneDSP.h"
 
-class RadiophoneProcessor : public juce::AudioProcessor, private juce::AsyncUpdater
+class RadiophoneProcessor : public juce::AudioProcessor
 {
 public:
     RadiophoneProcessor();
-    ~RadiophoneProcessor() override { cancelPendingUpdate(); }
+    ~RadiophoneProcessor() override = default;
 
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override {}
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
-    void reset() override { engine.reset(); }
+    void reset() override;
+    void processBlockBypassed (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
     juce::AudioProcessorEditor* createEditor() override;
     bool hasEditor() const override { return true; }
@@ -21,7 +22,7 @@ public:
     bool acceptsMidi() const override { return false; }
     bool producesMidi() const override { return false; }
     bool isMidiEffect() const override { return false; }
-    double getTailLengthSeconds() const override { return 1.5; }
+    double getTailLengthSeconds() const override { return 2.0; }
 
     int getNumPrograms() override { return 1; }
     int getCurrentProgram() override { return 0; }
@@ -41,12 +42,16 @@ public:
 
     // fuer die Anzeige in der Oberflaeche
     std::atomic<bool> transmitting { false }, tuning { false };
+    // GUI metadata never accesses the APVTS ValueTree concurrently with state restore.
+    std::atomic<int> uiTheme { 0 }, uiWidth { 680 }, uiHeight { 420 };
 
 private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
     rph::Engine engine;
-    void handleAsyncUpdate() override { setLatencySamples (reportedLatency.load()); }
-    std::atomic<int> reportedLatency { 0 };
+    void process (juce::AudioBuffer<float>&, bool bypassed);
+    std::vector<float> dryDelay[2];
+    int dryPosition = 0;
+    float bypassMix = 0.0f, bypassStep = 1.0f;
     rph::Samples rawSamples;      // dekodiert, Abtastrate der Datei
     void loadSamples();
     std::vector<float> mono;

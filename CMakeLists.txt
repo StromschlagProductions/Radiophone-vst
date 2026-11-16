@@ -9,6 +9,21 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Laufzeitbibliothek fest einbinden: das Plugin braucht dann kein VC++-Redistributable
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+option(RADIOPHONE_DSP_ONLY "Build portable DSP regression tests without JUCE" OFF)
+include(CTest)
+if(BUILD_TESTING)
+    find_package(Threads REQUIRED)
+    add_executable(RadiophoneDSPTests Tests/DSPTests.cpp)
+    target_include_directories(RadiophoneDSPTests PRIVATE Source)
+    target_link_libraries(RadiophoneDSPTests PRIVATE Threads::Threads)
+    add_test(NAME DSP COMMAND RadiophoneDSPTests)
+    add_executable(RadiophoneBenchmark Tests/Benchmark.cpp)
+    target_include_directories(RadiophoneBenchmark PRIVATE Source)
+endif()
+if(RADIOPHONE_DSP_ONLY)
+    return()
+endif()
+
 set(RADIOPHONE_JUCE_PATH "" CACHE PATH "Lokaler JUCE-Ordner (leer = automatisch laden)")
 set(RADIOPHONE_FORMATS "VST3" CACHE STRING "Plugin-Formate")
 
@@ -71,3 +86,12 @@ target_link_libraries(Radiophone
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags)
+
+if(BUILD_TESTING)
+    juce_add_console_app(RadiophoneProcessorTests PRODUCT_NAME "Radiophone processor tests")
+    target_sources(RadiophoneProcessorTests PRIVATE Tests/ProcessorTests.cpp)
+    target_include_directories(RadiophoneProcessorTests PRIVATE Source)
+    target_compile_definitions(RadiophoneProcessorTests PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0)
+    target_link_libraries(RadiophoneProcessorTests PRIVATE Radiophone juce::juce_audio_utils)
+    add_test(NAME Processor COMMAND RadiophoneProcessorTests)
+endif()

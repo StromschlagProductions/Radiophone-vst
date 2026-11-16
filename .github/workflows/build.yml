@@ -4,7 +4,14 @@ on:
   push:
     branches: [main]
     paths-ignore: ['docs/**', 'README.md']   # Doku-Aenderungen loesen keinen neuen Bau aus
+  pull_request:
+    branches: [main]
   workflow_dispatch:
+    inputs:
+      publish:
+        description: "Create a public release (explicit approval required)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -28,6 +35,9 @@ jobs:
       - name: Bauen
         run: cmake --build build --config Release --parallel
 
+      - name: Regressionstests
+        run: ctest --test-dir build -C Release --output-on-failure
+
       - name: Plugin bereitstellen
         uses: actions/upload-artifact@v4
         with:
@@ -48,6 +58,7 @@ jobs:
         run: Compress-Archive -Path "build/Radiophone_artefacts/Release/VST3/Radiophone.vst3" -DestinationPath "Radiophone-VST3-Windows.zip"
 
       - name: Release mit ZIP erstellen
+        if: github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.RPH_VERSION }}-b${{ github.run_number }}
