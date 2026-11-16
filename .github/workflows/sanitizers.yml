@@ -1,0 +1,21 @@
+name: DSP sanitizers
+on:
+  pull_request:
+    paths-ignore: ['docs/**', 'README.md']
+  push:
+    branches: [main]
+    paths-ignore: ['docs/**', 'README.md']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  dsp:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        sanitizer: ['address,undefined', 'thread']
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake -S . -B build -DRADIOPHONE_DSP_ONLY=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CXX_FLAGS="-fsanitize=${{ matrix.sanitizer }} -fno-omit-frame-pointer"
+      - run: cmake --build build --parallel 2
+      - run: ctest --test-dir build --output-on-failure

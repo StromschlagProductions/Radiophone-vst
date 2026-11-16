@@ -89,9 +89,11 @@ gesteuert. Die Stimme ist nur bei **Gespräch** zu hören.
 
 ## Hinweise
 
-- **Latenz:** Nur im Funkmodus 30 ms, Radio und Telefon haben keine. Der Vorlauf im Funkmodus ist nötig, damit das
-  Tschk vor dem ersten Wort liegt: Die Automatik erkennt Sprache 3 bis 22 ms nach dem hörbaren Anfang und braucht
-  dazu Reserve. Die DAW gleicht das automatisch aus (Plugin-Latenzausgleich). Wechselt man den Modus, meldet das Plugin die neue Latenz.
+- **Latenz:** Nur Funk hat rund 30 ms Vorlauf, damit das Squelch-Geräusch vor dem ersten Wort
+  liegt. Radio und Telefon haben 0 ms Plugin-Latenz. Die DAW gleicht die Funk-Latenz aus.
+  Nach einem Moduswechsel wird die geänderte Latenz über den Message-Thread gemeldet;
+  die DAW kann ihren Latenzausgleich kurz darauf neu berechnen. Für verlässliche zeitliche
+  Ausrichtung den Modus vor der Wiedergabe wählen.
 - Funk, Radio und Telefon sind mono: Eine Stereospur wird zusammengemischt und auf beide Seiten gelegt.
 - Die Stimme kommt etwa so laut heraus, wie sie hineingeht (ca. 1 dB leiser, durch die schmalere Bandbreite).
 
@@ -106,6 +108,7 @@ gesteuert. Die Stimme ist nur bei **Gespräch** zu hören.
 Die Versionsnummer steht in der Datei `VERSION`, im Plugin-Kopf und im Namen der Release. Sie wird bei jeder
 Änderung hochgezählt.
 
+- **1.4** – Echtzeitsichere Blockverarbeitung, echtzeitsichere Latenzmeldung, verzögerungskompensierter Bypass, geglättete Filterwechsel, erhaltene Geräuschfahnen und unabhängige Fenster. Details: [Technische Prüfung](docs/TECHNICAL_REVIEW.md), [Qualitätsbericht](docs/QUALITY_REPORT.md).
 - **1.3** – Hilfe und README allgemein für jede DAW formuliert (kein Bezug mehr auf eine bestimmte DAW).
 - **1.2** – Latenz von 80 auf 30 ms gesenkt (gemessen, nicht geschätzt), im Radio- und Telefonmodus 0.
 - **1.1** – Radio: neuer Regler „Störungen“ (Empfangsschwund mit Gruscheln, einstellbar); Squelch und Senderwechsel
@@ -121,7 +124,7 @@ Die Versionsnummer steht in der Datei `VERSION`, im Plugin-Kopf und im Namen der
 
 - `Source/RadiophoneDSP.h`: Klang-Engine (reines C++). Die Klangwerte je Gerät stehen oben in `voicing()`.
 - `Source/PluginProcessor.*`, `Source/PluginEditor.*`: JUCE-Plugin und Oberfläche
-- `.github/workflows/build.yml`: automatischer Windows-Bau mit Stabilitätstest (pluginval) und Release
+- `.github/workflows/build.yml`: Windows-Bau, Regressionstests und pluginval; Releases nur nach explizitem Workflow-Start mit `publish`
 
 ## Danke
 
