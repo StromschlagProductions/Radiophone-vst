@@ -1,16 +1,23 @@
 name: DSP sanitizers
+
+# Linux ist guenstig. Laeuft nur bei Aenderungen an DSP, Tests oder Build und bei manuellem Start.
 on:
-  pull_request:
-    paths-ignore: ['docs/**', 'README.md']
   push:
     branches: [main]
-    paths-ignore: ['docs/**', 'README.md']
+    paths: ['Source/RadiophoneDSP.h', 'Tests/**', 'CMakeLists.txt', '.github/workflows/sanitizers.yml']
   workflow_dispatch:
+
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   dsp:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       matrix:
         sanitizer: ['address,undefined', 'thread']

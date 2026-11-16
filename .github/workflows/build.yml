@@ -1,18 +1,22 @@
 name: Windows-VST3 bauen
 
+# Vollstaendiger Windows-Bau nur fuer die Abnahme: nach dem Merge auf main oder manuell.
+# Zwischencommits auf Branches und Pull Requests loesen keinen Lauf aus (spart Actions-Minuten,
+# Windows-Minuten zaehlen doppelt). Lokal bauen und testen: siehe docs/CI.md.
 on:
   push:
     branches: [main]
-    paths-ignore: ['docs/**', 'README.md']   # Doku-Aenderungen loesen keinen neuen Bau aus
-  pull_request:
-    branches: [main]
-    paths-ignore: ['docs/**', 'README.md']
+    paths-ignore: ['docs/**', 'README.md', '.github/workflows/sanitizers.yml']
   workflow_dispatch:
     inputs:
       publish:
         description: "Create a public release (explicit approval required)"
         type: boolean
         default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true   # ueberholte Laeufe auf demselben Branch abbrechen
 
 permissions:
   contents: write
