@@ -132,6 +132,8 @@ Die Versionsnummer steht in der Datei `VERSION`, im Plugin-Kopf und im Namen der
 
 **SOUNDJOB / Markus Hildebrandt** – Beta-Testing
 
+Ein großes Dankeschön an **Markus Hildebrandt** von SOUNDJOB. Markus betreibt ein eigenes Tonstudio und hat weit mehr Hörspiele produziert als ich. Er hat RADIOPHONE im Studioalltag getestet und mir ehrliches, fachkundiges Feedback gegeben. Auf seine Anregung hin gibt es seit Version 1.5 den Schalter „Radio: Ein“ mit Abschaltklick und echter Stille danach, dazu drei zufällig wechselnde Senderwechsel-Geräusche. Dafür danke ich ihm sehr: Seine Erfahrung hat das Plugin spürbar besser gemacht.
+
 Gebaut mit [JUCE](https://juce.com) 8. Die Sättigung (übersteuerter Funk- und Lautsprecherklang) folgt dem
 Algorithmus von **Airwindows Density** von Chris Johnson ([github.com/airwindows](https://github.com/airwindows/airwindows), MIT-Lizenz).
 Squelch und Senderwechsel nutzen Aufnahmen aus der HörTalk-Community, die dort frei nutzbar sind; die übrigen Geräusche werden im Plugin erzeugt.
