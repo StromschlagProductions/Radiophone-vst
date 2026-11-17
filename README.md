@@ -128,6 +128,19 @@ Die Versionsnummer steht in der Datei `VERSION`, im Plugin-Kopf und im Namen der
 - `Source/PluginProcessor.*`, `Source/PluginEditor.*`: JUCE-Plugin und Oberfläche
 - `.github/workflows/build.yml`: Windows-Bau, Regressionstests und pluginval; Releases nur nach explizitem Workflow-Start mit `publish`, siehe [docs/CI.md](docs/CI.md)
 
+## Qualität und Prüfung
+
+Wenige Regler heißen nicht, dass hier etwas schnell zusammengeschustert wurde. Die Einfachheit liegt in der Bedienung, nicht in der Technik dahinter. Jede Version durchläuft Prüfungen, wie sie auch bei kommerziellen Plugins üblich sind, und alles ist im Quellcode nachvollziehbar:
+
+- **pluginval, Stufe 8:** Vor jeder Veröffentlichung läuft das Prüfprogramm pluginval von Tracktion auf strenger Stufe. Es lädt das Plugin wieder und wieder, wechselt Abtastraten und Puffergrößen, speichert und lädt Einstellungen und fährt alle Regler mit Zufallswerten durch.
+- **Automatische Tests der Klangberechnung**, zusätzlich mit Speicher- und Fehlerprüfern (AddressSanitizer, UndefinedBehaviorSanitizer), die auch seltene Programmierfehler aufspüren.
+- **Echtzeitsicher:** Während der Wiedergabe wird kein Speicher angefordert und nirgends gewartet. Das verhindert Aussetzer und Knackser, auch bei kleinen Puffern und vielen Instanzen.
+- **Bewährte Bausteine:** Die Sättigung folgt dem Algorithmus Airwindows Density von Chris Johnson, dessen Plugins in vielen Studios im Einsatz sind.
+- **Gemessene Rechenlast:** Die Klangberechnung ist mit Benchmarks vermessen, die Rohwerte liegen im Repository.
+- Die Verzögerung wird an die DAW gemeldet und beim Bypass ausgeglichen, die Spur bleibt also immer synchron.
+
+Ob es gut klingt, entscheidet am Ende das Ohr. Deshalb geht jede Version auch durch den Studioalltag von Markus Hildebrandt (siehe unten).
+
 ## Beta-Test und Danke
 
 **SOUNDJOB / Markus Hildebrandt** – Beta-Testing
