@@ -62,7 +62,8 @@ static juce::AttributedString buildHelp (juce::Colour text, juce::Colour accent,
     head ("RADIO");
     body ("Fester Radioklang mit leisem Grundrauschen und gelegentlichem Knacken. Gut f\xc3\xbcr Musik und Durchsagen aus einem Radio.");
     body ("St\xc3\xb6rungen: Wie oft und wie stark der Empfang schlecht wird. Die Stimme sackt ab und geht ins Gruscheln, das Rauschen kommt hoch, dann ist sie wieder da. aus = keine St\xc3\xb6rungen, voll = h\xc3\xa4ufig und stark.");
-    body ("Senderwechsel: Klick auf den Knopf, oder den Parameter \xe2\x80\x9eRadio: Senderwechsel\xe2\x80\x9c automatisieren. Jede \xc3\x84nderung dreht den Sender weiter: Das Signal ist etwa eine Sekunde weg, es pfeift und rauscht, dann rastet der Sender wieder ein.");
+    body ("Senderwechsel: Klick auf den Knopf, oder den Parameter \xe2\x80\x9eRadio: Senderwechsel\xe2\x80\x9c automatisieren. Jede \xc3\x84nderung dreht den Sender weiter: Das Signal ist etwa eine Sekunde weg, es pfeift und rauscht, dann rastet der Sender wieder ein. Es gibt drei verschiedene Senderwechsel-Ger\xc3\xa4usche, sie kommen zuf\xc3\xa4llig und nie zweimal hintereinander.");
+    body ("Radio an/aus: Schaltet das Radio aus, mit einem Klick. Rauschen, Knacken und Stimme sind dann sofort still, auch wenn die Spur weiterl\xc3\xa4uft. Wieder an mit einem zweiten Klick. Automatisierbar als \xe2\x80\x9eRadio: Ein\xe2\x80\x9c.");
     note ("Den Raum (Radio steht hinten rechts) macht LOCATIONS oder der Pan am Kanal.");
 
     head ("TELEFON");
@@ -121,10 +122,14 @@ RadiophoneEditor::RadiophoneEditor (RadiophoneProcessor& p) : AudioProcessorEdit
     tuneButton.setTooltip (u8 ("Dreht den Sender weiter (ca. 1 s Pfeifen und Rauschen). Automatisierbar als \xe2\x80\x9eRadio: Senderwechsel\xe2\x80\x9c, jede \xc3\x84nderung l\xc3\xb6st einmal aus."));
     tuneButton.onClick = [this] { triggerTuning(); };
     content.addAndMakeVisible (tuneButton);
+    powerButton.setTooltip (u8 ("Radio ausschalten (Klick, dann Stille) oder wieder einschalten. Automatisierbar als \xe2\x80\x9eRadio: Ein\xe2\x80\x9c."));
+    powerButton.onClick = [this] { togglePower(); };
+    content.addAndMakeVisible (powerButton);
     setupKnob (intf, "intf", "St\xc3\xb6rungen");
     intf.slider.setTooltip (u8 ("Wie oft und wie stark der Empfang schlecht wird: die Stimme sackt ab und geht ins Gruscheln. aus = nie."));
     radioInfo.setText (u8 ("Senderwechsel: Das Signal ist kurz weg, es pfeift und rauscht, dann rastet der Sender wieder ein.\n\n"
-                           "St\xc3\xb6rungen: Die Stimme sackt ab und geht ins Gruscheln, wie bei schlechtem Empfang."), juce::dontSendNotification);
+                           "St\xc3\xb6rungen: Die Stimme sackt ab und geht ins Gruscheln, wie bei schlechtem Empfang.\n\n"
+                           "Radio: Aus schaltet mit einem Klick Rauschen und Stimme ab."), juce::dontSendNotification);
     radioInfo.setJustificationType (juce::Justification::topLeft);
     content.addAndMakeVisible (radioInfo);
 
@@ -228,9 +233,22 @@ void RadiophoneEditor::timerCallback()
         lineInfo.setText (lineDescription (line), juce::dontSendNotification);
         repaint();
     }
+    const bool radioOn = processor.apvts.getRawParameterValue ("power")->load() > 0.5f;
+    const juce::String powerText = radioOn ? "RADIO: AN" : "RADIO: AUS";
+    if (powerButton.getButtonText() != powerText) { powerButton.setButtonText (powerText); repaint(); }
     // Funk-Statuszeile zeigt Automatik/Taste, darum bei Aenderungen nachziehen
     const int key = juce::roundToInt (processor.apvts.getRawParameterValue ("key")->load());
     if (key != lastKeyShown) { lastKeyShown = key; repaint(); }
+}
+
+void RadiophoneEditor::togglePower()
+{
+    if (auto* prm = processor.apvts.getParameter ("power"))
+    {
+        prm->beginChangeGesture();
+        prm->setValueNotifyingHost (prm->getValue() > 0.5f ? 0.0f : 1.0f);
+        prm->endChangeGesture();
+    }
 }
 
 void RadiophoneEditor::updateModeVisibility()
@@ -245,6 +263,7 @@ void RadiophoneEditor::updateModeVisibility()
                                 (juce::Component*) &pause.slider, (juce::Component*) &pause.label })
         c->setVisible (funk);
     tuneButton.setVisible (radio);
+    powerButton.setVisible (radio);
     radioInfo.setVisible (radio);
     intf.slider.setVisible (radio);
     intf.label.setVisible (radio);
@@ -399,8 +418,10 @@ void RadiophoneEditor::paint (juce::Graphics& g)
     }
     else if (m == rph::kRadio)
     {
-        status = lampOn ? "SENDERWECHSEL" : "EMPFANG";
-        detail = u8 ("Grundrauschen und gelegentliches Knacken laufen immer leise mit");
+        const bool radioOn = processor.apvts.getRawParameterValue ("power")->load() > 0.5f;
+        status = ! radioOn ? "AUS" : lampOn ? "SENDERWECHSEL" : "EMPFANG";
+        detail = radioOn ? u8 ("Grundrauschen und gelegentliches Knacken laufen leise mit")
+                         : u8 ("Radio aus \xe2\x80\x93 Rauschen und Stimme sind stumm");
     }
     else
     {
@@ -486,6 +507,7 @@ void RadiophoneEditor::resized()
 
     // Radio
     tuneButton.setBounds ((int) kAx + 12, top + 4, 160, 44);
+    powerButton.setBounds ((int) kAx + 12, top + 56, 160, 44);
     placeKnob (intf, (int) kAx + 190, top, 130, 112);
     radioInfo.setBounds ((int) kAx + 332, top, (int) (kBx + kBw - kAx) - 344, 160);
 

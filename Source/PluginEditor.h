@@ -84,7 +84,8 @@ private:
     juce::ComboBox deviceBox, keyBox;
     Knob gate, pause, intf;
     // Radio
-    juce::TextButton tuneButton;
+    juce::TextButton tuneButton, powerButton;
+    void togglePower();
     juce::Label radioInfo;
     // Telefon
     juce::ComboBox lineBox, dialBox;

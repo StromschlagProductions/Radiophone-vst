@@ -57,7 +57,8 @@ Knacken. Passt auf Musik und auf Durchsagen.
 | Regler | Wirkung |
 |---|---|
 | **Störungen** | Wie oft und wie stark der Empfang schlecht wird: Die Stimme sackt ab und geht ins Gruscheln, das Rauschen kommt hoch, dann ist sie wieder da. aus = keine Störungen, voll = häufig und stark (Standard 50 %). |
-| **Senderwechsel** | Knopf oder Automation. Jede Änderung dreht den Sender weiter: Das Signal ist etwa eine Sekunde weg, es pfeift und rauscht, dann rastet der Sender ein. |
+| **Senderwechsel** | Knopf oder Automation. Jede Änderung dreht den Sender weiter: Das Signal ist etwa eine Sekunde weg, es pfeift und rauscht, dann rastet der Sender ein. Es gibt drei verschiedene Senderwechsel-Geräusche, sie kommen zufällig und nie zweimal hintereinander. |
+| **Radio: Ein** | Knopf oder Automation. Schaltet das Radio aus, mit einem Klick: Rauschen, Knacken und Stimme sind sofort still, auch wenn die Spur weiterläuft. Ein zweiter Klick schaltet es wieder an. So endet das Rauschen genau dort, wo das Radio abgeschaltet wird. |
 
 ### Telefon
 
@@ -108,6 +109,7 @@ gesteuert. Die Stimme ist nur bei **Gespräch** zu hören.
 Die Versionsnummer steht in der Datei `VERSION`, im Plugin-Kopf und im Namen der Release. Sie wird bei jeder
 Änderung hochgezählt.
 
+- **1.5** – Radio: neuer Schalter „Radio: Ein“ (Klick, dann Stille, kein Rauschen mehr nach dem Abschalten) und drei Senderwechsel-Geräusche, zufällig gewählt, nie zweimal dieselbe hintereinander. Die zwei zusätzlichen Senderwechsel sind aus der vorhandenen Aufnahme abgeleitet (anderes Drehtempo). Anregung aus dem Beta-Test.
 - **1.4** – Echtzeitsichere Blockverarbeitung, echtzeitsichere Latenzmeldung, verzögerungskompensierter Bypass, geglättete Filterwechsel, erhaltene Geräuschfahnen und unabhängige Fenster. Details: [Technische Prüfung](docs/TECHNICAL_REVIEW.md), [Qualitätsbericht](docs/QUALITY_REPORT.md).
 - **1.3** – Hilfe und README allgemein für jede DAW formuliert (kein Bezug mehr auf eine bestimmte DAW).
 - **1.2** – Latenz von 80 auf 30 ms gesenkt (gemessen, nicht geschätzt), im Radio- und Telefonmodus 0.

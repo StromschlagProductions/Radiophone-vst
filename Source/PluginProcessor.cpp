@@ -37,6 +37,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout RadiophoneProcessor::createL
     layout.add (std::make_unique<AudioParameterFloat> (ParameterID { "gate", 1 }, "Funk: Abhacken (Gate)",
                                                        NormalisableRange<float> (0.0f, 1.0f), 0.0f, gateText));
     layout.add (std::make_unique<AudioParameterBool> (ParameterID { "tune", 1 }, "Radio: Senderwechsel", false));
+    layout.add (std::make_unique<AudioParameterBool> (ParameterID { "power", 1 }, "Radio: Ein", true));
     layout.add (std::make_unique<AudioParameterFloat> (ParameterID { "intf", 1 }, u8 ("Radio: St\xc3\xb6rungen"),
                                                        NormalisableRange<float> (0.0f, 1.0f), 0.5f, gateText));
     layout.add (std::make_unique<AudioParameterChoice> (ParameterID { "line", 1 }, "Telefon: Leitung", lineNames(), 0));
@@ -59,6 +60,7 @@ RadiophoneProcessor::RadiophoneProcessor()
     pGate = apvts.getRawParameterValue ("gate");
     pSfx = apvts.getRawParameterValue ("sfx");
     pTune = apvts.getRawParameterValue ("tune");
+    pPower = apvts.getRawParameterValue ("power");
     pLine = apvts.getRawParameterValue ("line");
     pDial = apvts.getRawParameterValue ("dial");
     pIntf = apvts.getRawParameterValue ("intf");
@@ -97,7 +99,11 @@ void RadiophoneProcessor::loadSamples()
     load (BinaryData::sq_auto_close_wav, BinaryData::sq_auto_close_wavSize, rawSamples.sqClose[rph::kAutofunk]);
     load (BinaryData::sq_tisch_open_wav, BinaryData::sq_tisch_open_wavSize, rawSamples.sqOpen[rph::kTischfunk]);
     load (BinaryData::sq_tisch_close_wav, BinaryData::sq_tisch_close_wavSize, rawSamples.sqClose[rph::kTischfunk]);
-    load (BinaryData::tune_wav, BinaryData::tune_wavSize, rawSamples.tune);
+    load (BinaryData::tune_wav, BinaryData::tune_wavSize, rawSamples.tune[0]);
+    load (BinaryData::tune2_wav, BinaryData::tune2_wavSize, rawSamples.tune[1]);
+    load (BinaryData::tune3_wav, BinaryData::tune3_wavSize, rawSamples.tune[2]);
+    load (BinaryData::radio_off_wav, BinaryData::radio_off_wavSize, rawSamples.power[0]);
+    load (BinaryData::radio_on_wav, BinaryData::radio_on_wavSize, rawSamples.power[1]);
 #endif
 }
 
@@ -171,6 +177,7 @@ void RadiophoneProcessor::process (juce::AudioBuffer<float>& buffer, bool bypass
     p.tuneCount = pTune->load() > 0.5f ? 1 : 0;   // jede Aenderung loest einen Senderwechsel aus
     p.line = choice (pLine->load(), 5);
     p.dialType = choice (pDial->load(), 1);
+    p.radioOn = pPower->load() > 0.5f ? 1 : 0;
     p.interference = pIntf->load();
 
     // A bounded work buffer handles arbitrary host blocks without resizing.

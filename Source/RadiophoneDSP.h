@@ -178,6 +178,7 @@ struct Params
     float sfxDb = 0.0f;        // Lautstaerke aller eingebauten Geraeusche
     float gate = 0.0f;         // Funk: 0 = aus, 1 = stark abgehackt
     int tuneCount = 0;         // Radio: jede Aenderung = ein Senderwechsel
+    int radioOn = 1;           // Radio: 0 = ausgeschaltet (Klick, dann Stille: kein Rauschen, keine Stimme)
     int line = kGespraech;     // Telefon: Zustand der Leitung
     int dialType = kScheibe;
     float interference = 0.5f; // Radio: 0 = keine Stoerungen, 1 = haeufig und stark
@@ -188,7 +189,9 @@ struct Params
 struct Samples
 {
     double rate = 44100.0;                 // Abtastrate der Rohdaten
-    std::vector<float> sqOpen[3], sqClose[3], tune;   // je Geraet: Oeffnen und Schliessen, dazu Senderwechsel
+    std::vector<float> sqOpen[3], sqClose[3];   // je Geraet: Oeffnen und Schliessen
+    std::vector<float> tune[3];                 // Senderwechsel: drei Varianten, zufaellig gewaehlt
+    std::vector<float> power[2];                // Radio: [0] ausschalten, [1] einschalten (Klick)
 };
 
 class Engine
@@ -200,6 +203,7 @@ public:
     static constexpr float kLookaheadSec = RPH_LOOKAHEAD_SEC;
     static constexpr float kSqSampleGain = 0.5f;     // Pegel der Squelch-Aufnahmen
     static constexpr float kTuneSampleGain = 0.9f;   // Pegel der Senderwechsel-Aufnahme
+    static constexpr float kPowerClickGain = 0.6f;   // Pegel des Ein-/Ausschalt-Klicks
 
     // nach prepare() aufrufen: rechnet die Aufnahmen auf die Abtastrate der DAW um
     void setSamples (const Samples& in)
@@ -226,7 +230,8 @@ public:
             smp.sqOpen[d] = conv (in.sqOpen[d]);
             smp.sqClose[d] = conv (in.sqClose[d]);
         }
-        smp.tune = conv (in.tune);
+        for (int i = 0; i < 3; ++i) smp.tune[i] = conv (in.tune[i]);
+        for (int i = 0; i < 2; ++i) smp.power[i] = conv (in.power[i]);
         hasSamples = true;
     }
 
@@ -240,6 +245,7 @@ public:
         gAtt = coef (0.0005f); gRel = coef (0.012f);
         rampOpen = 1.0f / (0.004f * (float) fs); rampClose = 1.0f / (0.002f * (float) fs);
         gateRamp = 1.0f / (0.0012f * (float) fs);
+        rampPowerOff = 1.0f / (0.025f * (float) fs); rampPowerOn = 1.0f / (0.060f * (float) fs);
         configured = false;
         reset();
     }
@@ -271,6 +277,8 @@ public:
         toneT = 0; toneOn = false; dialStep = 0; dialTimer = 0; dialPulsesLeft = 0; dialDigitsLeft = 0;
         dtmfLeft = 0; clickLeft = 0;
         hissFlutter = 1.0f;
+        powerGain = powerTarget = 1.0f; lastPower = 1; powerClick = {};
+        tuneSrc = nullptr; lastTuneIdx = -1;
     }
 
     // mono: liest und schreibt buf
@@ -341,6 +349,11 @@ public:
             voiceGain += std::clamp (voiceTarget - voiceGain, -rampClose, rampOpen);
             float vg = voiceGain;
 
+            {
+                const float pr = powerTarget > powerGain ? rampPowerOn : rampPowerOff;
+                powerGain += std::clamp (powerTarget - powerGain, -pr, pr);
+            }
+
             // --- Geraeusche, die durch den Leitungsfilter gehen
             float fx = 0.0f;
             float sq = 0.0f;   // Squelch hat einen eigenen Filter
@@ -362,7 +375,14 @@ public:
             }
             else if (p.mode == kRadio)
             {
-                vg *= radioTick (fx, hiss);
+                // Ausgeschaltet: nach dem kurzen Ausblenden ist alles still (Rauschen, Knacken, Stimme)
+                if (powerGain > 0.0f || powerTarget > 0.0f)
+                {
+                    float fr = 0.0f;
+                    vg *= radioTick (fr, hiss) * powerGain;
+                    fx += fr * powerGain;
+                }
+                else vg = 0.0f;
             }
             else
             {
@@ -381,7 +401,8 @@ public:
             const float out = y * vg
                             + fxBand.process (fx) * sfx
                             + (lastSqSample ? sq : density (sqBand.process (sq), 1.0f) * 0.75f) * sfx   // Aufnahmen ungefiltert
-                            + mechBand.process (mc) * sfx;
+                            + mechBand.process (mc) * sfx
+                            + nextPowerClick() * kPowerClickGain * sfx;   // Aufnahme ungefiltert
             buf[i] = std::isfinite (out) ? out : 0.0f;
         }
     }
@@ -421,6 +442,7 @@ private:
             // Beim Start keine Geraeusche ausloesen, nur den Zustand uebernehmen
             firstBlock = false;
             lastKey = p.key; lastTune = p.tuneCount; lastLine = p.line;
+            lastPower = p.radioOn; powerTarget = powerGain = (p.mode != kRadio || p.radioOn) ? 1.0f : 0.0f;
             if (p.mode == kFunk)
             {
                 txOpen = (p.key == kKeyDown);
@@ -445,7 +467,16 @@ private:
         }
         if (p.mode != kFunk) lastKey = p.key;
 
-        if (p.mode == kRadio && p.tuneCount != lastTune) startTuning();
+        if (p.mode == kRadio && p.radioOn != lastPower)
+        {
+            startPowerClick (p.radioOn != 0);
+            powerTarget = p.radioOn ? 1.0f : 0.0f;
+            if (! p.radioOn) { tuneLeft = 0; dipLeft = 0; crackleLeft = 0; }
+        }
+        else if (p.mode != kRadio) powerTarget = powerGain = 1.0f;   // andere Modi: nicht betroffen, kein Klick
+        lastPower = p.radioOn;
+
+        if (p.mode == kRadio && p.tuneCount != lastTune && p.radioOn) startTuning();
         lastTune = p.tuneCount;
 
         if (p.mode == kTelefon && p.line != lastLine)
@@ -551,9 +582,47 @@ private:
     Biquad tuneRes;
     float hissFlutter = 1.0f;
 
+    // Radio ein/aus: Klick-Aufnahme (oder kurzer synthetischer Klick), dazu Aus-/Einblenden von Rauschen und Stimme
+    struct PowerClick { int pos = 0, len = 0; const std::vector<float>* src = nullptr; };
+    PowerClick powerClick;
+    float powerGain = 1.0f, powerTarget = 1.0f, rampPowerOff = 0.01f, rampPowerOn = 0.01f;
+    int lastPower = 1;
+    const std::vector<float>* tuneSrc = nullptr;   // gewaehlte Senderwechsel-Aufnahme
+    int lastTuneIdx = -1;
+
+    void startPowerClick (bool on)
+    {
+        powerClick = {};
+        const auto& v = smp.power[on ? 1 : 0];
+        if (hasSamples && ! v.empty()) { powerClick.src = &v; powerClick.len = (int) v.size(); }
+        else powerClick.len = (int) (0.012 * fs);
+    }
+
+    float nextPowerClick()
+    {
+        if (powerClick.pos >= powerClick.len) return 0.0f;
+        const int i = powerClick.pos++;
+        if (powerClick.src) return (*powerClick.src)[(size_t) i];
+        return rng.bi() * std::exp (-(float) i / (0.002f * (float) fs)) * 0.7f;
+    }
+
+    // waehlt eine der vorhandenen Aufnahmen zufaellig, nie zweimal dieselbe hintereinander
+    const std::vector<float>* pickTune()
+    {
+        int avail[3], n = 0;
+        if (hasSamples)
+            for (int i = 0; i < 3; ++i) if (! smp.tune[i].empty()) avail[n++] = i;
+        if (n == 0) { lastTuneIdx = -1; return nullptr; }
+        int k = std::min (n - 1, (int) (rng.uni() * (float) n));
+        if (n > 1 && avail[k] == lastTuneIdx) k = (k + 1 + (n > 2 && rng.uni() < 0.5f ? 1 : 0)) % n;
+        lastTuneIdx = avail[k];
+        return &smp.tune[avail[k]];
+    }
+
     void startTuning()
     {
-        tuneLen = hasSamples && ! smp.tune.empty() ? (int) smp.tune.size() : (int) (1.25 * fs);
+        tuneSrc = pickTune();
+        tuneLen = tuneSrc ? (int) tuneSrc->size() : (int) (1.25 * fs);
         tuneLeft = tuneLen;
         tuneF1 = 2600.0f + 900.0f * rng.uni();
         tuneF2 = 300.0f + 500.0f * rng.uni();
@@ -611,8 +680,11 @@ private:
             const float fadeIn = std::clamp ((t - (T - 0.3f)) / 0.3f, 0.0f, 1.0f);
             voice *= std::max (fadeOut, fadeIn);
 
-            if (hasSamples && ! smp.tune.empty())
-                fx += smp.tune[(size_t) (tuneLen - tuneLeft)] * kTuneSampleGain;
+            if (tuneSrc)
+            {
+                if ((size_t) (tuneLen - tuneLeft) < tuneSrc->size())
+                    fx += (*tuneSrc)[(size_t) (tuneLen - tuneLeft)] * kTuneSampleGain;
+            }
             else
             {
                 const float mid = std::sin (kPi * std::clamp (t / (T - 0.15f), 0.0f, 1.0f));

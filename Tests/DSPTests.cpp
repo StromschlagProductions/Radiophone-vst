@@ -60,7 +60,7 @@ static void run (double fs)
     std::fill (block.begin(), block.end(), 0.0f); e.process (block.data(), 257, p);
     CHECK (block[200] > 0.09f);
     // Recorded tuning must continue to completion across modes, then reset reproducibly.
-    samples.tune.assign (1000, 0.1f); e.prepare (fs); e.setSamples (samples);
+    samples.tune[0].assign (1000, 0.1f); e.prepare (fs); e.setSamples (samples);
     p = {}; p.mode = rph::kRadio; e.process (&x, 1, p); ++p.tuneCount; e.process (&x, 1, p);
     CHECK (e.isTuning()); p.mode = rph::kTelefon;
     e.process (block.data(), 257, p); CHECK (e.isTuning());
@@ -72,8 +72,63 @@ static void run (double fs)
     e.process (tail.data(), (int) tail.size(), p);
     float energy = 0; for (float v : tail) energy += v * v; CHECK (energy > 1e-5f);
 }
+
+// Radio aus: nach dem kurzen Ausblenden komplett still (auch ohne Eingang), Klick beim Aus- und Einschalten,
+// wieder an bringt Rauschen zurueck. Senderwechsel waehrend "aus" wird ignoriert.
+static void radioPower (double fs)
+{
+    NoDenormals denormals;
+    rph::Engine e; e.prepare (fs);
+    rph::Params p; p.mode = rph::kRadio; p.interference = 1.0f;
+    std::vector<float> b ((size_t) (0.5 * fs), 0.0f);
+    auto energy = [] (const float* v, size_t n) { double s = 0; for (size_t i = 0; i < n; ++i) s += (double) v[i] * v[i]; return s; };
+    e.process (b.data(), (int) b.size(), p);                           // ein: Rauschen laeuft
+    CHECK (energy (b.data(), b.size()) > 1e-6);
+    p.radioOn = 0;
+    std::fill (b.begin(), b.end(), 0.0f); e.process (b.data(), (int) b.size(), p);
+    const size_t quiet = (size_t) (0.2 * fs);                          // Ausblenden 25 ms + Klick (synthetisch 12 ms)
+    CHECK (energy (b.data() + quiet, b.size() - quiet) == 0.0);       // danach exakt still
+    CHECK (energy (b.data(), quiet) > 1e-6);                           // am Anfang Klick/Ausblenden hoerbar
+    ++p.tuneCount; std::fill (b.begin(), b.end(), 0.0f); e.process (b.data(), (int) b.size(), p);
+    CHECK (! e.isTuning() && energy (b.data(), b.size()) == 0.0);     // kein Senderwechsel im aus-Zustand
+    p.radioOn = 1; std::fill (b.begin(), b.end(), 0.0f); e.process (b.data(), (int) b.size(), p);
+    CHECK (energy (b.data() + quiet, b.size() - quiet) > 1e-6);        // wieder Rauschen
+    // andere Modi sind nicht betroffen
+    p.radioOn = 0; p.mode = rph::kTelefon; b = signal ((int) b.size(), fs); e.process (b.data(), (int) b.size(), p);
+    CHECK (energy (b.data(), b.size()) > 1.0);
+}
+
+// Drei Senderwechsel-Aufnahmen: zufaellig, nie zweimal dieselbe hintereinander, alle kommen vor.
+static void tuneVariants (double fs)
+{
+    NoDenormals denormals;
+    rph::Samples sm; sm.rate = fs;
+    const int lens[3] = { 300, 600, 900 };
+    for (int v = 0; v < 3; ++v)
+    {
+        sm.tune[v].resize ((size_t) lens[v]);
+        for (int i = 0; i < lens[v]; ++i) sm.tune[v][(size_t) i] = 0.5f * (float) std::sin (i * 1500.0 / fs);
+    }
+    rph::Engine e; e.prepare (fs); e.setSamples (sm);
+    rph::Params p; p.mode = rph::kRadio; p.interference = 0.0f; p.sfxDb = 0.0f;
+    float x = 0; e.process (&x, 1, p);
+    int seen[3] = { 0, 0, 0 }, last = -1;
+    std::vector<float> b (1000);
+    for (int i = 0; i < 60; ++i)
+    {
+        ++p.tuneCount; std::fill (b.begin(), b.end(), 0.0f); e.process (b.data(), 1, p);
+        e.process (b.data(), 1000, p);
+        auto ms = [&] (int from, int to) { double t = 0; for (int k = from; k < to; ++k) t += (double) b[(size_t) k] * b[(size_t) k]; return t / (to - from); };
+        // Laenge der abgespielten Aufnahme verraet die Variante (Ton laeuft bis 300 / 600 / 900 Samples)
+        const int idx = ms (700, 850) > 0.01 ? 2 : ms (400, 550) > 0.01 ? 1 : ms (100, 250) > 0.01 ? 0 : -1;
+        CHECK (idx >= 0 && idx != last);
+        ++seen[idx]; last = idx;
+    }
+    CHECK (seen[0] > 5 && seen[1] > 5 && seen[2] > 5);
+}
 int main()
 {
+    radioPower (44100); radioPower (96000); tuneVariants (44100);
     for (double fs : { 22050., 44100., 48000., 96000., 192000. }) run (fs);
     std::thread a ([] { run (44100); }), b ([] { run (96000); }); a.join(); b.join();
     std::cout << "DSP: sample rates, partition invariance, reset, modes, tails, finite output and allocation checks passed\n";
