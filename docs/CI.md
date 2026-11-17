@@ -16,3 +16,5 @@ Alle Prüfungen bleiben erhalten (Windows-Bau, Regressionstests, pluginval Stric
 1. Lokal bauen und testen.
 2. Zur Abnahme: Actions > „Windows-VST3 bauen“ > „Run workflow“ auf `main`, zunächst ohne Haken.
 3. Wenn alles passt und gehört wurde: dieselbe Aktion mit Haken **publish**.
+
+Verbindliches öffentliches Versionsschema: `docs/VERSIONING.md` (ohne Build-Suffix).
