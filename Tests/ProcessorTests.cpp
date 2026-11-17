@@ -85,8 +85,10 @@ int main()
         b.processBlock (view, midi);
     }
     for (int c = 0; c < 2; ++c) for (int i = 0; i < 65537; ++i) CHECK (whole.getSample (c, i) == split.getSample (c, i));
+    parameter (a, "power", 0);
     parameter (a, "mode", 2); parameter (a, "sfx", -12); a.uiTheme = 1; a.uiWidth = 900; a.uiHeight = 556;
     juce::MemoryBlock state; a.getStateInformation (state); b.setStateInformation (state.getData(), (int) state.getSize());
+    CHECK (b.apvts.getRawParameterValue ("power")->load() == 0);
     CHECK (b.apvts.getRawParameterValue ("mode")->load() == 2); CHECK (b.uiTheme == 1); CHECK (b.uiWidth == 900);
     b.setStateInformation ("broken", 6); CHECK (b.apvts.getRawParameterValue ("mode")->load() == 2);
     // GUI construction/destruction and independent metadata (no display peer required).
