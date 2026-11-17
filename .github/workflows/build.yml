@@ -73,4 +73,4 @@ jobs:
           make_latest: true
           files: |
             Radiophone-VST3-Windows.zip
-          body: "Windows-VST3 aus dem automatischen Bau. Entpacken, Ordner Radiophone.vst3 nach C:\\Program Files\\Common Files\\VST3 kopieren."
+          body_path: docs/RELEASE_NOTES_1.5.md
