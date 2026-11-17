@@ -15,3 +15,5 @@
 Ein Git-Push oder erfolgreicher Build ist **nicht** automatisch eine Freigabe. Keine automatische öffentliche Veröffentlichung bei jedem Commit. So werden unfertige Builds und unnötige Windows-CI-Kosten vermieden.
 
 Übergreifender Standard: https://github.com/StromschlagProductions/StromschlagProductions.github.io/blob/main/docs/RELEASE_STANDARD.md
+
+Verbindliches öffentliches Versionsschema: `docs/VERSIONING.md` (ohne Build-Suffix).
