@@ -35,6 +35,13 @@ jobs:
           "RPH_VERSION=$v" >> $env:GITHUB_ENV
           if ("${{ inputs.publish }}" -eq "true" -and "${{ github.ref }}" -ne "refs/heads/main") { Write-Error "Release nur auf main"; exit 1 }
 
+      - name: Herstelleridentitaet pruefen
+        shell: pwsh
+        run: |
+          $cmake = Get-Content CMakeLists.txt -Raw
+          if ($cmake -notmatch 'COMPANY_NAME\\s+"Stromschlag Audio"') { throw "Hersteller muss Stromschlag Audio sein" }
+          if ($cmake -match '(?i)COMPANY_NAME\\s+"[^"]*(Claude|Anthropic)') { throw "Falscher Plugin-Hersteller" }
+
       - name: Konfigurieren
         run: cmake -B build -A x64
 
