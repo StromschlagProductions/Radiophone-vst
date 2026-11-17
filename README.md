@@ -126,7 +126,9 @@ Die Versionsnummer steht in der Datei `VERSION`, im Plugin-Kopf und im Namen der
 - `Source/PluginProcessor.*`, `Source/PluginEditor.*`: JUCE-Plugin und Oberfläche
 - `.github/workflows/build.yml`: Windows-Bau, Regressionstests und pluginval; Releases nur nach explizitem Workflow-Start mit `publish`, siehe [docs/CI.md](docs/CI.md)
 
-## Danke
+## Beta-Test und Danke
+
+**SOUNDJOB / Markus Hildebrandt** – Beta-Testing
 
 Gebaut mit [JUCE](https://juce.com) 8. Die Sättigung (übersteuerter Funk- und Lautsprecherklang) folgt dem
 Algorithmus von **Airwindows Density** von Chris Johnson ([github.com/airwindows](https://github.com/airwindows/airwindows), MIT-Lizenz).
