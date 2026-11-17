@@ -38,6 +38,18 @@ jobs:
           if (-not (Test-Path "docs/releases/$v.md")) { throw "Release-Hinweise fuer $v fehlen" }
           if ("${{ inputs.publish }}" -eq "true" -and "${{ github.ref }}" -ne "refs/heads/main") { Write-Error "Release nur auf main"; exit 1 }
 
+      - name: Screenshot-Version vor Veroeffentlichung pruefen
+        if: github.event_name == 'workflow_dispatch' && inputs.publish
+        shell: pwsh
+        run: |
+          $v = (Get-Content VERSION -TotalCount 1).Trim()
+          $manifest = Get-Content docs/screenshots.json -Raw | ConvertFrom-Json
+          if ($manifest.version -ne $v) { throw "Screenshots fuer $v mit dem Screenshot-Werkzeug neu erzeugen" }
+          if ($manifest.images.Count -lt 2) { throw "Screenshot-Varianten fehlen" }
+          foreach ($image in $manifest.images) {
+            if ($image -notmatch '^oberflaeche-[a-z]+\.png$' -or -not (Test-Path "docs/$image")) { throw "Screenshot fehlt: $image" }
+          }
+
       - name: Herstelleridentitaet pruefen
         shell: pwsh
         run: |
@@ -97,4 +109,5 @@ jobs:
           make_latest: true
           files: |
             ${{ env.ZIP_NAME }}
+            docs/screenshots.json
           body_path: docs/releases/${{ env.RPH_VERSION }}.md

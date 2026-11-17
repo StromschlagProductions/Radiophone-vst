@@ -96,3 +96,11 @@ if(BUILD_TESTING)
     target_link_libraries(RadiophoneProcessorTests PRIVATE Radiophone juce::juce_audio_utils)
     add_test(NAME Processor COMMAND RadiophoneProcessorTests)
 endif()
+
+# Real editor snapshots, excluded from normal plugin/release builds.
+juce_add_console_app(RadiophoneScreenshot PRODUCT_NAME "Radiophone screenshot")
+target_sources(RadiophoneScreenshot PRIVATE tools/screenshot.cpp)
+target_include_directories(RadiophoneScreenshot PRIVATE Source $<TARGET_PROPERTY:Radiophone,INCLUDE_DIRECTORIES>)
+target_compile_definitions(RadiophoneScreenshot PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 PLUGIN_VERSION_TEXT="${RPH_VERSION}")
+target_link_libraries(RadiophoneScreenshot PRIVATE Radiophone)
+set_target_properties(RadiophoneScreenshot PROPERTIES EXCLUDE_FROM_ALL TRUE)
