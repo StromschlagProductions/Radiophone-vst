@@ -425,7 +425,10 @@ void RadiophoneEditor::paint (juce::Graphics& g)
     }
     else
     {
-        status = RadiophoneProcessor::lineNames()[juce::jlimit (0, 5, lastLine < 0 ? 0 : lastLine)].toUpperCase();
+        status = RadiophoneProcessor::lineNames()[juce::jlimit (0, 5, lastLine < 0 ? 0 : lastLine)].toUpperCase()
+                     .replace (juce::String::fromUTF8 ("\xc3\xa4"), juce::String::fromUTF8 ("\xc3\x84"))
+                     .replace (juce::String::fromUTF8 ("\xc3\xb6"), juce::String::fromUTF8 ("\xc3\x96"))
+                     .replace (juce::String::fromUTF8 ("\xc3\xbc"), juce::String::fromUTF8 ("\xc3\x9c"));   // toUpperCase laesst Umlaute klein
         detail = lampOn ? u8 ("Stimme ist zu h\xc3\xb6ren") : u8 ("Stimme ist stumm (nur bei Gespr\xc3\xa4\x63h zu h\xc3\xb6ren)");
     }
     const juce::Rectangle<float> lamp (26.0f, 162.0f, 16.0f, 16.0f);
