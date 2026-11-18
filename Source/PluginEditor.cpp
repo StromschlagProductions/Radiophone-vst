@@ -62,14 +62,14 @@ static juce::AttributedString buildHelp (juce::Colour text, juce::Colour accent,
     head ("RADIO");
     body ("Fester Radioklang mit leisem Grundrauschen und gelegentlichem Knacken. Gut f\xc3\xbcr Musik und Durchsagen aus einem Radio.");
     body ("St\xc3\xb6rungen: Wie oft und wie stark der Empfang schlecht wird. Die Stimme sackt ab und geht ins Gruscheln, das Rauschen kommt hoch, dann ist sie wieder da. aus = keine St\xc3\xb6rungen, voll = h\xc3\xa4ufig und stark.");
-    body ("Senderwechsel: Klick auf den Knopf, oder den Parameter \xe2\x80\x9eRadio: Senderwechsel\xe2\x80\x9c automatisieren. Jede \xc3\x84nderung dreht den Sender weiter: Das Signal ist etwa eine Sekunde weg, es pfeift und rauscht, dann rastet der Sender wieder ein. Es gibt drei verschiedene Senderwechsel-Ger\xc3\xa4usche, sie kommen zuf\xc3\xa4llig und nie zweimal hintereinander.");
+    body ("Senderwechsel: Klick auf den Knopf, oder den Parameter \xe2\x80\x9eRadio: Senderwechsel\xe2\x80\x9c automatisieren. Jede \xc3\x84nderung dreht den Sender weiter: Das Signal ist etwa eine Sekunde weg, es pfeift und rauscht, dann rastet der Sender wieder ein. Es gibt neun verschiedene Senderwechsel-Ger\xc3\xa4usche, sie kommen zuf\xc3\xa4llig und nie zweimal dasselbe hintereinander.");
     body ("Radio an/aus: Schaltet das Radio aus, mit einem Klick. Rauschen, Knacken und Stimme sind dann sofort still, auch wenn die Spur weiterl\xc3\xa4uft. Wieder an mit einem zweiten Klick. Automatisierbar als \xe2\x80\x9eRadio: Ein\xe2\x80\x9c.");
     note ("Den Raum (Radio steht hinten rechts) macht LOCATIONS oder der Pan am Kanal.");
 
     head ("TELEFON");
     body ("Fester Telefonklang. Automatisiere \xe2\x80\x9eTelefon: Leitung\xe2\x80\x9c f\xc3\xbcr den Ablauf, z. B. Aufgelegt \xe2\x86\x92 W\xc3\xa4hlton \xe2\x86\x92 W\xc3\xa4hlen \xe2\x86\x92 Freizeichen \xe2\x86\x92 Gespr\xc3\xa4\x63h \xe2\x86\x92 Besetzt \xe2\x86\x92 Aufgelegt.");
     body ("Weg von Aufgelegt = H\xc3\xb6rer abnehmen (Klacken), hin zu Aufgelegt = Leitung wird aufgelegt (passt zu W\xc3\xa4hlscheibe, Tastentelefon und Handy). Die Stimme ist nur bei Gespr\xc3\xa4\x63h zu h\xc3\xb6ren.");
-    body ("W\xc3\xa4hlart: W\xc3\xa4hlscheibe (Impulse, typisch f\xc3\xbcr die 80er) oder Tasten (T\xc3\xb6ne).");
+    body ("W\xc3\xa4hlart: W\xc3\xa4hlscheibe (Impulse, typisch f\xc3\xbcr die 80er) oder Tasten (T\xc3\xb6ne). Jedes W\xc3\xa4hlen ist eine neue, zuf\xc3\xa4llige Nummer mit leicht schwankenden Pausen. Du musst keine W\xc3\xa4hlt\xc3\xb6ne mehr von Hand variieren. Nach dem Laden beginnt der Zufall immer gleich, ein Export klingt also jedes Mal identisch.");
 
     head ("GER\xc3\x84USCHE");
     body ("Lautst\xc3\xa4rke aller eingebauten Ger\xc3\xa4usche: Squelch, Rauschen, Knacken, Senderwechsel und Telefont\xc3\xb6ne. Die Stimme bleibt davon unber\xc3\xbchrt.");

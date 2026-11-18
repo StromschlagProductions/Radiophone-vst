@@ -94,14 +94,22 @@ void RadiophoneProcessor::loadSamples()
         if (decodeWav (d, sz, v, rate)) { dst = v; rawSamples.rate = rate; }
     };
     load (BinaryData::sq_walkie_open_wav, BinaryData::sq_walkie_open_wavSize, rawSamples.sqOpen[rph::kWalkie]);
-    load (BinaryData::sq_walkie_close_wav, BinaryData::sq_walkie_close_wavSize, rawSamples.sqClose[rph::kWalkie]);
+    load (BinaryData::sq_walkie_close_wav, BinaryData::sq_walkie_close_wavSize, rawSamples.sqClose[rph::kWalkie][0]);
     load (BinaryData::sq_auto_open_wav, BinaryData::sq_auto_open_wavSize, rawSamples.sqOpen[rph::kAutofunk]);
-    load (BinaryData::sq_auto_close_wav, BinaryData::sq_auto_close_wavSize, rawSamples.sqClose[rph::kAutofunk]);
+    load (BinaryData::sq_auto_close_wav, BinaryData::sq_auto_close_wavSize, rawSamples.sqClose[rph::kAutofunk][0]);
     load (BinaryData::sq_tisch_open_wav, BinaryData::sq_tisch_open_wavSize, rawSamples.sqOpen[rph::kTischfunk]);
-    load (BinaryData::sq_tisch_close_wav, BinaryData::sq_tisch_close_wavSize, rawSamples.sqClose[rph::kTischfunk]);
+    load (BinaryData::sq_tisch_close_wav, BinaryData::sq_tisch_close_wavSize, rawSamples.sqClose[rph::kTischfunk][0]);
+    load (BinaryData::sq_walkie_close2_wav, BinaryData::sq_walkie_close2_wavSize, rawSamples.sqClose[rph::kWalkie][1]);
+    load (BinaryData::sq_walkie_close3_wav, BinaryData::sq_walkie_close3_wavSize, rawSamples.sqClose[rph::kWalkie][2]);
     load (BinaryData::tune_wav, BinaryData::tune_wavSize, rawSamples.tune[0]);
-    load (BinaryData::tune2_wav, BinaryData::tune2_wavSize, rawSamples.tune[1]);
-    load (BinaryData::tune3_wav, BinaryData::tune3_wavSize, rawSamples.tune[2]);
+    load (BinaryData::tune1_wav, BinaryData::tune1_wavSize, rawSamples.tune[1]);
+    load (BinaryData::tune2_wav, BinaryData::tune2_wavSize, rawSamples.tune[2]);
+    load (BinaryData::tune3_wav, BinaryData::tune3_wavSize, rawSamples.tune[3]);
+    load (BinaryData::tune4_wav, BinaryData::tune4_wavSize, rawSamples.tune[4]);
+    load (BinaryData::tune5_wav, BinaryData::tune5_wavSize, rawSamples.tune[5]);
+    load (BinaryData::tune6_wav, BinaryData::tune6_wavSize, rawSamples.tune[6]);
+    load (BinaryData::tune7_wav, BinaryData::tune7_wavSize, rawSamples.tune[7]);
+    load (BinaryData::tune8_wav, BinaryData::tune8_wavSize, rawSamples.tune[8]);
     load (BinaryData::radio_off_wav, BinaryData::radio_off_wavSize, rawSamples.power[0]);
     load (BinaryData::radio_on_wav, BinaryData::radio_on_wavSize, rawSamples.power[1]);
     load (BinaryData::hangup_wav, BinaryData::hangup_wavSize, rawSamples.hangup);

@@ -44,7 +44,7 @@ unter der Stimme. Ist sie losgelassen, ist der Empfänger stumm.
 
 | Regler | Wirkung |
 |---|---|
-| **Gerät** | Walkie-Talkie (schmal, rau, langes Kschhh), Autofunk (mittig, kurzes Kschhh), Tischfunk (voller) |
+| **Gerät** | Walkie-Talkie (schmal, rau, langes Kschhh), Autofunk (mittig, kurzes Kschhh), Tischfunk (voller). Beim Walkie-Talkie wechselt das Kschhh am Ende zufällig zwischen drei Aufnahmen, nie zweimal dasselbe hintereinander. |
 | **Sprechtaste** | **Automatik:** öffnet beim ersten Wort (das Tschk liegt kurz davor), schließt erst nach der eingestellten Pause. Kurze Pausen zwischen Wörtern oder Sätzen lösen nichts aus. **Gedrückt / Losgelassen:** volle Kontrolle per Automation. |
 | **Pause bis Ende** | nur Automatik: so lange Stille (0,2–3 s, Standard 0,6 s), bis die Taste als losgelassen gilt |
 | **Abhacken** | aus = sauber. Je weiter aufgedreht, desto eher bricht die Verbindung bei leisen Stellen hart weg. |
@@ -57,7 +57,7 @@ Knacken. Passt auf Musik und auf Durchsagen.
 | Regler | Wirkung |
 |---|---|
 | **Störungen** | Wie oft und wie stark der Empfang schlecht wird: Die Stimme sackt ab und geht ins Gruscheln, das Rauschen kommt hoch, dann ist sie wieder da. aus = keine Störungen, voll = häufig und stark (Standard 50 %). |
-| **Senderwechsel** | Knopf oder Automation. Jede Änderung dreht den Sender weiter: Das Signal ist etwa eine Sekunde weg, es pfeift und rauscht, dann rastet der Sender ein. Es gibt drei verschiedene Senderwechsel-Geräusche, sie kommen zufällig und nie zweimal hintereinander. |
+| **Senderwechsel** | Knopf oder Automation. Jede Änderung dreht den Sender weiter: Das Signal ist etwa eine Sekunde weg, es pfeift und rauscht, dann rastet der Sender ein. Neun verschiedene Senderwechsel-Geräusche (echte Aufnahmen, gleich laut), zufällig gewählt und nie zweimal dasselbe hintereinander. So klingt kein Senderwechsel wie der vorige. |
 | **Radio: Ein** | Knopf oder Automation. Schaltet das Radio aus, mit einem Klick: Rauschen, Knacken und Stimme sind sofort still, auch wenn die Spur weiterläuft. Ein zweiter Klick schaltet es wieder an. So endet das Rauschen genau dort, wo das Radio abgeschaltet wird. |
 
 ### Telefon
@@ -68,7 +68,7 @@ gesteuert. Die Stimme ist nur bei **Gespräch** zu hören.
 | Regler | Wirkung |
 |---|---|
 | **Leitung** | Gespräch · Aufgelegt · Wählton (425 Hz) · Wählen · Freizeichen (1 s Ton, 4 s Pause) · Besetzt. Weg von *Aufgelegt* = Hörer abnehmen (Klacken), hin zu *Aufgelegt* = die Leitung wird aufgelegt (eine echte Aufnahme, die zu jedem Telefon passt: Wählscheibe, Tastentelefon, Handy). Andere Wechsel knacken kurz in der Leitung. |
-| **Wählart** | Wählscheibe (Impulse, typisch für die 80er) oder Tasten (Töne). Gewählt wird, bis man auf Freizeichen umschaltet. |
+| **Wählart** | Wählscheibe (Impulse, typisch für die 80er) oder Tasten (Töne). Gewählt wird, bis man auf Freizeichen umschaltet. **Jedes Wählen ist eine neue, zufällige Nummer**, mit leicht unterschiedlichen Pausen zwischen den Ziffern, wie bei einem Menschen. Wer mehrmals wählen lässt, bekommt nie zweimal dieselbe Tonfolge und muss keine Wähltöne mehr von Hand variieren. Der Zufall beginnt nach dem Laden des Plugins immer gleich, darum klingt ein Export jedes Mal identisch. |
 
 ### Für alle Modi
 
@@ -109,7 +109,7 @@ gesteuert. Die Stimme ist nur bei **Gespräch** zu hören.
 Die Versionsnummer steht in der Datei `VERSION`, im Plugin-Kopf und im Namen der Release. Sie wird bei jeder
 Änderung hochgezählt.
 
-- **1.7** – Telefon: neues Auflegegeräusch. Statt eines eingehängten Hörers ist jetzt das Auflegen der Leitung zu hören, passend für jedes Telefon. Anregung aus dem Beta-Test. [Release-Hinweise](docs/releases/1.7.md).
+- **1.7** – Telefon: neues Auflegegeräusch. Statt eines eingehängten Hörers ist jetzt das Auflegen der Leitung zu hören, passend für jedes Telefon. Radio: neun Senderwechsel-Aufnahmen statt drei, gleich laut, zufällig. Funk: drei Schluss-Squelches beim Walkie-Talkie, zufällig. Anregungen und Aufnahmen aus dem Beta-Test. [Release-Hinweise](docs/releases/1.7.md).
 - **1.6** – Einheitliche öffentliche Versionsnummer ohne Build-Suffix; Audioverarbeitung und Projektkompatibilität unverändert. [Release-Hinweise](docs/releases/1.6.md).
 - **1.5** – Radio: neuer Schalter „Radio: Ein“ (Klick, dann Stille, kein Rauschen mehr nach dem Abschalten) und drei Senderwechsel-Geräusche, zufällig gewählt, nie zweimal dieselbe hintereinander. Die zwei zusätzlichen Senderwechsel sind aus der vorhandenen Aufnahme abgeleitet (anderes Drehtempo). Anregung aus dem Beta-Test.
 - **1.4** – Echtzeitsichere Blockverarbeitung, echtzeitsichere Latenzmeldung, verzögerungskompensierter Bypass, geglättete Filterwechsel, erhaltene Geräuschfahnen und unabhängige Fenster. Details: [Technische Prüfung](docs/TECHNICAL_REVIEW.md), [Qualitätsbericht](docs/QUALITY_REPORT.md).
@@ -151,7 +151,7 @@ Ein großes Dankeschön an **Markus Hildebrandt** von SOUNDJOB. Markus betreibt 
 
 Gebaut mit [JUCE](https://juce.com) 8. Die Sättigung (übersteuerter Funk- und Lautsprecherklang) folgt dem
 Algorithmus von **Airwindows Density** von Chris Johnson ([github.com/airwindows](https://github.com/airwindows/airwindows), MIT-Lizenz).
-Squelch und Senderwechsel nutzen Aufnahmen aus der HörTalk-Community, die dort frei nutzbar sind; die übrigen Geräusche werden im Plugin erzeugt.
+Squelch und Senderwechsel nutzen Aufnahmen aus der HörTalk-Community, die dort frei nutzbar sind, sowie weitere Aufnahmen von Lars Eickstädt; das Auflegegeräusch stammt von Markus Hildebrandt (SOUNDJOB). Die übrigen Geräusche werden im Plugin erzeugt.
 
 ---
 

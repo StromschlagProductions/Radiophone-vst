@@ -189,8 +189,10 @@ struct Params
 struct Samples
 {
     double rate = 44100.0;                 // Abtastrate der Rohdaten
-    std::vector<float> sqOpen[3], sqClose[3];   // je Geraet: Oeffnen und Schliessen
-    std::vector<float> tune[3];                 // Senderwechsel: drei Varianten, zufaellig gewaehlt
+    static constexpr int kMaxSqClose = 4, kMaxTune = 12;
+    std::vector<float> sqOpen[3];               // je Geraet: Oeffnen
+    std::vector<float> sqClose[3][kMaxSqClose]; // je Geraet: Schliessen, mehrere Varianten, zufaellig gewaehlt
+    std::vector<float> tune[kMaxTune];          // Senderwechsel: Varianten, zufaellig gewaehlt
     std::vector<float> power[2];                // Radio: [0] ausschalten, [1] einschalten (Klick)
     std::vector<float> hangup;                  // Telefon: Leitung wird aufgelegt (passt zu jedem Telefon)
 };
@@ -230,9 +232,9 @@ public:
         for (int d = 0; d < 3; ++d)
         {
             smp.sqOpen[d] = conv (in.sqOpen[d]);
-            smp.sqClose[d] = conv (in.sqClose[d]);
+            for (int v = 0; v < Samples::kMaxSqClose; ++v) smp.sqClose[d][v] = conv (in.sqClose[d][v]);
         }
-        for (int i = 0; i < 3; ++i) smp.tune[i] = conv (in.tune[i]);
+        for (int i = 0; i < Samples::kMaxTune; ++i) smp.tune[i] = conv (in.tune[i]);
         for (int i = 0; i < 2; ++i) smp.power[i] = conv (in.power[i]);
         smp.hangup = conv (in.hangup);
         hasSamples = true;
@@ -281,7 +283,7 @@ public:
         dtmfLeft = 0; clickLeft = 0;
         hissFlutter = 1.0f;
         powerGain = powerTarget = 1.0f; lastPower = 1; powerClick = {};
-        tuneSrc = nullptr; lastTuneIdx = -1;
+        tuneSrc = nullptr; lastTuneIdx = -1; lastSqClose[0] = lastSqClose[1] = lastSqClose[2] = -1;
     }
 
     // mono: liest und schreibt buf
@@ -532,10 +534,10 @@ private:
         pendingClose = -1;
         voiceTarget = 0.0f;
         // Schliessen: flacher Rauschstoss mit hartem Ende (das typische "Kschhh")
-        if (hasSamples && ! smp.sqClose[p.device].empty())
+        if (const auto* v = pickVariant (smp.sqClose[p.device], Samples::kMaxSqClose, lastSqClose[p.device]))
         {
             squelch = {};
-            squelch.src = &smp.sqClose[p.device];
+            squelch.src = v;
             squelch.len = (int) squelch.src->size();
             squelch.level = kSqSampleGain;
             return;
@@ -610,18 +612,22 @@ private:
         return rng.bi() * std::exp (-(float) i / (0.002f * (float) fs)) * 0.7f;
     }
 
+    int lastSqClose[3] = { -1, -1, -1 };
+
     // waehlt eine der vorhandenen Aufnahmen zufaellig, nie zweimal dieselbe hintereinander
-    const std::vector<float>* pickTune()
+    const std::vector<float>* pickVariant (const std::vector<float>* list, int count, int& last)
     {
-        int avail[3], n = 0;
-        if (hasSamples)
-            for (int i = 0; i < 3; ++i) if (! smp.tune[i].empty()) avail[n++] = i;
-        if (n == 0) { lastTuneIdx = -1; return nullptr; }
-        int k = std::min (n - 1, (int) (rng.uni() * (float) n));
-        if (n > 1 && avail[k] == lastTuneIdx) k = (k + 1 + (n > 2 && rng.uni() < 0.5f ? 1 : 0)) % n;
-        lastTuneIdx = avail[k];
-        return &smp.tune[avail[k]];
+        if (! hasSamples) return nullptr;
+        int avail[16], n = 0;
+        for (int i = 0; i < count && n < 16; ++i)
+            if (! list[i].empty() && i != last) avail[n++] = i;
+        if (n == 0)   // nur eine Aufnahme vorhanden (oder keine)
+            return (last >= 0 && last < count && ! list[last].empty()) ? &list[last] : nullptr;
+        last = avail[std::min (n - 1, (int) (rng.uni() * (float) n))];
+        return &list[last];
     }
+
+    const std::vector<float>* pickTune() { return pickVariant (smp.tune, Samples::kMaxTune, lastTuneIdx); }
 
     void startTuning()
     {

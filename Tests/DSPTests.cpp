@@ -143,8 +143,35 @@ static void hangupSample (double fs)
     double tail = 0; for (size_t i = 2100; i < b.size(); ++i) tail += std::abs (b[i]);
     CHECK (tail < 1.0);                                            // danach ruhig (Leitung tot)
 }
+
+// Funk: mehrere Schliess-Squelches je Geraet, zufaellig, nie zweimal derselbe hintereinander, alle kommen vor.
+static void squelchVariants (double fs)
+{
+    NoDenormals denormals;
+    rph::Samples sm; sm.rate = fs;
+    const int lens[3] = { 400, 800, 1200 };
+    for (int v = 0; v < 3; ++v) sm.sqClose[rph::kWalkie][v].assign ((size_t) lens[v], 0.9f);
+    rph::Engine e; e.prepare (fs); e.setSamples (sm);
+    rph::Params p; p.mode = rph::kFunk; p.device = rph::kWalkie; p.sfxDb = 0.0f;
+    std::vector<float> b ((size_t) (0.4 * fs));
+    int seen[3] = { 0, 0, 0 }, last = -1;
+    for (int i = 0; i < 45; ++i)
+    {
+        p.key = rph::kKeyDown; std::fill (b.begin(), b.end(), 0.0f); e.process (b.data(), (int) b.size(), p);
+        p.key = rph::kKeyUp; std::fill (b.begin(), b.end(), 0.0f); e.process (b.data(), (int) b.size(), p);
+        int first = -1, lastHit = -1;
+        for (int k = 0; k < (int) b.size(); ++k) if (std::abs (b[(size_t) k]) > 0.3f) { if (first < 0) first = k; lastHit = k; }
+        CHECK (first >= 0);
+        const int len = lastHit - first + 1;
+        const int idx = len < 600 ? 0 : len < 1000 ? 1 : 2;
+        CHECK (idx != last);
+        ++seen[idx]; last = idx;
+    }
+    CHECK (seen[0] > 5 && seen[1] > 5 && seen[2] > 5);
+}
 int main()
 {
+    squelchVariants (44100); squelchVariants (48000);
     hangupSample (44100); hangupSample (48000);
     radioPower (44100); radioPower (96000); tuneVariants (44100);
     for (double fs : { 22050., 44100., 48000., 96000., 192000. }) run (fs);
