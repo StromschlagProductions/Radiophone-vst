@@ -151,7 +151,7 @@ Ein großes Dankeschön an **Markus Hildebrandt** von SOUNDJOB. Markus betreibt 
 
 Gebaut mit [JUCE](https://juce.com) 8. Die Sättigung (übersteuerter Funk- und Lautsprecherklang) folgt dem
 Algorithmus von **Airwindows Density** von Chris Johnson ([github.com/airwindows](https://github.com/airwindows/airwindows), MIT-Lizenz).
-Squelch und Senderwechsel nutzen Aufnahmen aus der HörTalk-Community, die dort frei nutzbar sind, sowie weitere Aufnahmen von Lars Eickstädt; das Auflegegeräusch stammt von Markus Hildebrandt (SOUNDJOB). Die übrigen Geräusche werden im Plugin erzeugt.
+Squelch und Senderwechsel nutzen Aufnahmen aus der HörTalk-Community, die dort frei nutzbar sind; die übrigen Geräusche werden im Plugin erzeugt.
 
 ---
 
