@@ -109,7 +109,7 @@ gesteuert. Die Stimme ist nur bei **Gespräch** zu hören.
 Die Versionsnummer steht in der Datei `VERSION`, im Plugin-Kopf und im Namen der Release. Sie wird bei jeder
 Änderung hochgezählt.
 
-- **1.7** – Telefon: neues Auflegegeräusch. Statt eines eingehängten Hörers ist jetzt das Auflegen der Leitung zu hören, passend für jedes Telefon. Radio: neun Senderwechsel-Aufnahmen statt drei, gleich laut, zufällig. Funk: drei Schluss-Squelches beim Walkie-Talkie, zufällig. Anregungen und Aufnahmen aus dem Beta-Test. [Release-Hinweise](docs/releases/1.7.md).
+- **1.7** – Telefon: neues Auflegegeräusch. Statt eines eingehängten Hörers ist jetzt das Auflegen der Leitung zu hören, passend für jedes Telefon. Radio: neun Senderwechsel-Aufnahmen statt drei, gleich laut, zufällig. Funk: drei Schluss-Squelches beim Walkie-Talkie, zufällig. Anregungen aus dem Beta-Test. [Release-Hinweise](docs/releases/1.7.md).
 - **1.6** – Einheitliche öffentliche Versionsnummer ohne Build-Suffix; Audioverarbeitung und Projektkompatibilität unverändert. [Release-Hinweise](docs/releases/1.6.md).
 - **1.5** – Radio: neuer Schalter „Radio: Ein“ (Klick, dann Stille, kein Rauschen mehr nach dem Abschalten) und drei Senderwechsel-Geräusche, zufällig gewählt, nie zweimal dieselbe hintereinander. Die zwei zusätzlichen Senderwechsel sind aus der vorhandenen Aufnahme abgeleitet (anderes Drehtempo). Anregung aus dem Beta-Test.
 - **1.4** – Echtzeitsichere Blockverarbeitung, echtzeitsichere Latenzmeldung, verzögerungskompensierter Bypass, geglättete Filterwechsel, erhaltene Geräuschfahnen und unabhängige Fenster. Details: [Technische Prüfung](docs/TECHNICAL_REVIEW.md), [Qualitätsbericht](docs/QUALITY_REPORT.md).
@@ -147,7 +147,7 @@ Ob es gut klingt, entscheidet am Ende das Ohr. Deshalb geht jede Version auch du
 
 **SOUNDJOB / Markus Hildebrandt** – Beta-Testing
 
-Ein großes Dankeschön an **Markus Hildebrandt** von SOUNDJOB. Markus betreibt ein eigenes Tonstudio und hat weit mehr Hörspiele produziert als ich. Er hat RADIOPHONE im Studioalltag getestet und mir ehrliches, fachkundiges Feedback gegeben. Auf seine Anregung hin gibt es seit Version 1.5 den Schalter „Radio: Ein“ mit Abschaltklick und echter Stille danach, dazu drei zufällig wechselnde Senderwechsel-Geräusche. Dafür danke ich ihm sehr: Seine Erfahrung hat das Plugin spürbar besser gemacht.
+Ein großes Dankeschön an **Markus Hildebrandt** von SOUNDJOB. Markus betreibt ein eigenes Tonstudio und hat weit mehr Hörspiele produziert als ich. Er hat RADIOPHONE im Studioalltag getestet und mir ehrliches, fachkundiges Feedback gegeben. Auf seine Anregung hin gibt es seit Version 1.5 den Schalter „Radio: Ein“ mit Abschaltklick und echter Stille danach, dazu zufällig wechselnde Senderwechsel-Geräusche, seit 1.7 das Auflegen der Leitung, das zu jedem Telefon passt, und wechselnde Squelches beim Walkie-Talkie. Dafür danke ich ihm sehr: Seine Erfahrung hat das Plugin spürbar besser gemacht.
 
 Gebaut mit [JUCE](https://juce.com) 8. Die Sättigung (übersteuerter Funk- und Lautsprecherklang) folgt dem
 Algorithmus von **Airwindows Density** von Chris Johnson ([github.com/airwindows](https://github.com/airwindows/airwindows), MIT-Lizenz).
