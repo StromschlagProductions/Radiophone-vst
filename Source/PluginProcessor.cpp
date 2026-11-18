@@ -104,6 +104,7 @@ void RadiophoneProcessor::loadSamples()
     load (BinaryData::tune3_wav, BinaryData::tune3_wavSize, rawSamples.tune[2]);
     load (BinaryData::radio_off_wav, BinaryData::radio_off_wavSize, rawSamples.power[0]);
     load (BinaryData::radio_on_wav, BinaryData::radio_on_wavSize, rawSamples.power[1]);
+    load (BinaryData::hangup_wav, BinaryData::hangup_wavSize, rawSamples.hangup);
 #endif
 }
 

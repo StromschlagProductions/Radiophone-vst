@@ -67,7 +67,7 @@ gesteuert. Die Stimme ist nur bei **Gespräch** zu hören.
 
 | Regler | Wirkung |
 |---|---|
-| **Leitung** | Gespräch · Aufgelegt · Wählton (425 Hz) · Wählen · Freizeichen (1 s Ton, 4 s Pause) · Besetzt. Weg von *Aufgelegt* = Hörer abnehmen (Klacken), hin zu *Aufgelegt* = Auflegen. Andere Wechsel knacken kurz in der Leitung. |
+| **Leitung** | Gespräch · Aufgelegt · Wählton (425 Hz) · Wählen · Freizeichen (1 s Ton, 4 s Pause) · Besetzt. Weg von *Aufgelegt* = Hörer abnehmen (Klacken), hin zu *Aufgelegt* = die Leitung wird aufgelegt (eine echte Aufnahme, die zu jedem Telefon passt: Wählscheibe, Tastentelefon, Handy). Andere Wechsel knacken kurz in der Leitung. |
 | **Wählart** | Wählscheibe (Impulse, typisch für die 80er) oder Tasten (Töne). Gewählt wird, bis man auf Freizeichen umschaltet. |
 
 ### Für alle Modi
@@ -109,6 +109,7 @@ gesteuert. Die Stimme ist nur bei **Gespräch** zu hören.
 Die Versionsnummer steht in der Datei `VERSION`, im Plugin-Kopf und im Namen der Release. Sie wird bei jeder
 Änderung hochgezählt.
 
+- **1.7** – Telefon: neues Auflegegeräusch. Statt eines eingehängten Hörers ist jetzt das Auflegen der Leitung zu hören, passend für jedes Telefon. Anregung aus dem Beta-Test. [Release-Hinweise](docs/releases/1.7.md).
 - **1.6** – Einheitliche öffentliche Versionsnummer ohne Build-Suffix; Audioverarbeitung und Projektkompatibilität unverändert. [Release-Hinweise](docs/releases/1.6.md).
 - **1.5** – Radio: neuer Schalter „Radio: Ein“ (Klick, dann Stille, kein Rauschen mehr nach dem Abschalten) und drei Senderwechsel-Geräusche, zufällig gewählt, nie zweimal dieselbe hintereinander. Die zwei zusätzlichen Senderwechsel sind aus der vorhandenen Aufnahme abgeleitet (anderes Drehtempo). Anregung aus dem Beta-Test.
 - **1.4** – Echtzeitsichere Blockverarbeitung, echtzeitsichere Latenzmeldung, verzögerungskompensierter Bypass, geglättete Filterwechsel, erhaltene Geräuschfahnen und unabhängige Fenster. Details: [Technische Prüfung](docs/TECHNICAL_REVIEW.md), [Qualitätsbericht](docs/QUALITY_REPORT.md).

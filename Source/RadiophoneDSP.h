@@ -192,6 +192,7 @@ struct Samples
     std::vector<float> sqOpen[3], sqClose[3];   // je Geraet: Oeffnen und Schliessen
     std::vector<float> tune[3];                 // Senderwechsel: drei Varianten, zufaellig gewaehlt
     std::vector<float> power[2];                // Radio: [0] ausschalten, [1] einschalten (Klick)
+    std::vector<float> hangup;                  // Telefon: Leitung wird aufgelegt (passt zu jedem Telefon)
 };
 
 class Engine
@@ -204,6 +205,7 @@ public:
     static constexpr float kSqSampleGain = 0.5f;     // Pegel der Squelch-Aufnahmen
     static constexpr float kTuneSampleGain = 0.9f;   // Pegel der Senderwechsel-Aufnahme
     static constexpr float kPowerClickGain = 0.6f;   // Pegel des Ein-/Ausschalt-Klicks
+    static constexpr float kHangupGain = 0.55f;      // Pegel der Auflege-Aufnahme
 
     // nach prepare() aufrufen: rechnet die Aufnahmen auf die Abtastrate der DAW um
     void setSamples (const Samples& in)
@@ -232,6 +234,7 @@ public:
         }
         for (int i = 0; i < 3; ++i) smp.tune[i] = conv (in.tune[i]);
         for (int i = 0; i < 2; ++i) smp.power[i] = conv (in.power[i]);
+        smp.hangup = conv (in.hangup);
         hasSamples = true;
     }
 
@@ -402,6 +405,7 @@ public:
                             + fxBand.process (fx) * sfx
                             + (lastSqSample ? sq : density (sqBand.process (sq), 1.0f) * 0.75f) * sfx   // Aufnahmen ungefiltert
                             + mechBand.process (mc) * sfx
+                            + mechRaw * kHangupGain * sfx   // Auflege-Aufnahme ungefiltert
                             + nextPowerClick() * kPowerClickGain * sfx;   // Aufnahme ungefiltert
             buf[i] = std::isfinite (out) ? out : 0.0f;
         }
@@ -719,7 +723,8 @@ private:
     int clickLeft = 0;
     Rng dialRng;
 
-    struct Mech { int pos = 0, len = 0; bool hangup = false; };
+    struct Mech { int pos = 0, len = 0; bool hangup = false; const std::vector<float>* src = nullptr; };
+    float mechRaw = 0.0f;   // Aufnahme-Anteil von nextMech (geht am Leitungsfilter vorbei)
     Mech mech[2];   // zwei, damit sich Auflegen und erneutes Abheben ueberlappen duerfen
 
     void enterLine (const Params& p, bool withSound)
@@ -741,17 +746,20 @@ private:
     void startMech (bool hangup)
     {
         Mech& m = mech[mech[0].pos >= mech[0].len ? 0 : 1];
-        m.pos = 0; m.hangup = hangup;
+        m.pos = 0; m.hangup = hangup; m.src = nullptr;
         m.len = (int) ((hangup ? 0.45 : 0.30) * fs);
+        if (hangup && hasSamples && ! smp.hangup.empty()) { m.src = &smp.hangup; m.len = (int) smp.hangup.size(); }
     }
 
     // Hoerer abnehmen / auflegen: Klick, dumpfer Schlag, ein Hauch Glocke (alte Telefone)
     float nextMech()
     {
         float s = 0.0f;
+        mechRaw = 0.0f;
         for (auto& m : mech)
         {
             if (m.pos >= m.len) continue;
+            if (m.src) { mechRaw += (*m.src)[(size_t) m.pos++]; continue; }
             const float t = (float) m.pos++ / (float) fs;
             const float a = m.hangup ? 1.0f : 0.7f;
             auto hit = [&] (float t0, float amp)

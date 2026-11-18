@@ -126,8 +126,26 @@ static void tuneVariants (double fs)
     }
     CHECK (seen[0] > 5 && seen[1] > 5 && seen[2] > 5);
 }
+
+// Telefon: Auflegen spielt die Auflege-Aufnahme (ungefiltert) in voller Laenge, danach Stille.
+static void hangupSample (double fs)
+{
+    NoDenormals denormals;
+    rph::Samples sm; sm.rate = fs; sm.hangup.assign (2000, 0.5f);
+    rph::Engine e; e.prepare (fs); e.setSamples (sm);
+    rph::Params p; p.mode = rph::kTelefon; p.line = rph::kGespraech; p.sfxDb = 0.0f;
+    std::vector<float> b (4000, 0.0f);
+    e.process (b.data(), (int) b.size(), p);
+    p.line = rph::kAufgelegt; std::fill (b.begin(), b.end(), 0.0f);
+    e.process (b.data(), (int) b.size(), p);
+    int hits = 0; for (int i = 0; i < 2000; ++i) if (std::abs (b[(size_t) i] - 0.5f * rph::Engine::kHangupGain) < 0.05f) ++hits;
+    CHECK (hits > 1900);                                           // Aufnahme klar erkennbar
+    double tail = 0; for (size_t i = 2100; i < b.size(); ++i) tail += std::abs (b[i]);
+    CHECK (tail < 1.0);                                            // danach ruhig (Leitung tot)
+}
 int main()
 {
+    hangupSample (44100); hangupSample (48000);
     radioPower (44100); radioPower (96000); tuneVariants (44100);
     for (double fs : { 22050., 44100., 48000., 96000., 192000. }) run (fs);
     std::thread a ([] { run (44100); }), b ([] { run (96000); }); a.join(); b.join();
