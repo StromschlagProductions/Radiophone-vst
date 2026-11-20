@@ -16,7 +16,7 @@ juce::String lineDescription (int line)
     switch (line)
     {
         case rph::kGespraech:   return u8 ("Die Stimme ist zu h\xc3\xb6ren, leise Leitung im Hintergrund.");
-        case rph::kAufgelegt:   return u8 ("Leitung tot, die Stimme ist stumm. Der Wechsel von hier weg klingt wie H\xc3\xb6rer abnehmen, der Wechsel hierher legt die Leitung auf (Knacken in der Leitung, passt zu jedem Telefon).");
+        case rph::kAufgelegt:   return u8 ("Leitung tot, die Stimme ist stumm. Der Wechsel von hier weg \xc3\xb6ffnet die Leitung mit einem kurzen Klacken, der Wechsel hierher legt sie auf. Beides passt zu jedem Telefon.");
         case rph::kWaehlton:    return u8 ("H\xc3\xb6rer ist abgenommen: Dauerton (425 Hz), es wurde noch nicht gew\xc3\xa4hlt.");
         case rph::kWaehlen:     return u8 ("Es wird eine Nummer gew\xc3\xa4hlt, bis du auf Freizeichen umschaltest.");
         case rph::kFreizeichen: return u8 ("Es klingelt beim Angerufenen: 1 s Ton, 4 s Pause.");
@@ -68,7 +68,7 @@ static juce::AttributedString buildHelp (juce::Colour text, juce::Colour accent,
 
     head ("TELEFON");
     body ("Fester Telefonklang. Automatisiere \xe2\x80\x9eTelefon: Leitung\xe2\x80\x9c f\xc3\xbcr den Ablauf, z. B. Aufgelegt \xe2\x86\x92 W\xc3\xa4hlton \xe2\x86\x92 W\xc3\xa4hlen \xe2\x86\x92 Freizeichen \xe2\x86\x92 Gespr\xc3\xa4\x63h \xe2\x86\x92 Besetzt \xe2\x86\x92 Aufgelegt.");
-    body ("Weg von Aufgelegt = H\xc3\xb6rer abnehmen (Klacken), hin zu Aufgelegt = Leitung wird aufgelegt (passt zu W\xc3\xa4hlscheibe, Tastentelefon und Handy). Die Stimme ist nur bei Gespr\xc3\xa4\x63h zu h\xc3\xb6ren.");
+    body ("Weg von Aufgelegt = die Leitung geht auf (kurzes, neutrales Klacken), hin zu Aufgelegt = Leitung wird aufgelegt (passt zu W\xc3\xa4hlscheibe, Tastentelefon und Handy). Die Stimme ist nur bei Gespr\xc3\xa4\x63h zu h\xc3\xb6ren.");
     body ("W\xc3\xa4hlart: W\xc3\xa4hlscheibe (Impulse, typisch f\xc3\xbcr die 80er) oder Tasten (T\xc3\xb6ne). Jedes W\xc3\xa4hlen ist eine neue, zuf\xc3\xa4llige Nummer mit leicht schwankenden Pausen. Du musst keine W\xc3\xa4hlt\xc3\xb6ne mehr von Hand variieren. Nach dem Laden beginnt der Zufall immer gleich, ein Export klingt also jedes Mal identisch.");
 
     head ("GER\xc3\x84USCHE");

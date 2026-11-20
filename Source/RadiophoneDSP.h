@@ -753,11 +753,12 @@ private:
     {
         Mech& m = mech[mech[0].pos >= mech[0].len ? 0 : 1];
         m.pos = 0; m.hangup = hangup; m.src = nullptr;
-        m.len = (int) ((hangup ? 0.45 : 0.30) * fs);
+        m.len = (int) ((hangup ? 0.45 : 0.06) * fs);
         if (hangup && hasSamples && ! smp.hangup.empty()) { m.src = &smp.hangup; m.len = (int) smp.hangup.size(); }
     }
 
-    // Hoerer abnehmen / auflegen: Klick, dumpfer Schlag, ein Hauch Glocke (alte Telefone)
+    // Leitung geht auf: neutrales Leitungsklacken (passt zu jedem Telefon).
+    // Auflegen ohne Aufnahme: Klick, dumpfer Schlag, ein Hauch Glocke (Rueckfall)
     float nextMech()
     {
         float s = 0.0f;
@@ -767,7 +768,16 @@ private:
             if (m.pos >= m.len) continue;
             if (m.src) { mechRaw += (*m.src)[(size_t) m.pos++]; continue; }
             const float t = (float) m.pos++ / (float) fs;
-            const float a = m.hangup ? 1.0f : 0.7f;
+            if (! m.hangup)
+            {
+                // kurzer Knack mit kleinem, trockenem Schlag, kein Hoerer, keine Glocke
+                float v = 0.0f;
+                if (t < 0.006f) v += 0.9f * rng.bi() * std::exp (-t / 0.0015f);
+                v += 0.35f * std::sin (2.0f * kPi * 260.0f * t) * std::exp (-t / 0.008f);
+                s += v;
+                continue;
+            }
+            const float a = 1.0f;
             auto hit = [&] (float t0, float amp)
             {
                 const float u = t - t0;
@@ -782,8 +792,7 @@ private:
                 return v * amp;
             };
             s += hit (0.0f, a);
-            if (m.hangup) s += hit (0.055f, 0.45f);   // Gabel prellt nach
-            else s += hit (0.11f, 0.25f);            // Hoerer wird angehoben, zweites Klacken
+            s += hit (0.055f, 0.45f);   // Gabel prellt nach
         }
         return s * 0.6f;
     }

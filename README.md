@@ -7,7 +7,7 @@
 
 VST3-Insert-Effekt für Hörspiel-Produktion. Er lässt eine Stimme oder Musik klingen, als käme sie aus einem
 Funkgerät, einem Radio oder einem Telefon, und bringt die passenden Geräusche gleich mit: das Tschk und Kschhh
-der Sprechtaste, Rauschen und Knacken im Radio, Wählton, Wählscheibe, Freizeichen und das Klacken des Hörers.
+der Sprechtaste, Rauschen und Knacken im Radio, Wählton, Wählscheibe, Freizeichen, das Klacken der Leitung beim Abnehmen und das Auflegen.
 
 **⬇ Download (Windows · VST3 · Stereo):** https://github.com/StromschlagProductions/Radiophone-vst/releases/latest
 
@@ -67,7 +67,7 @@ gesteuert. Die Stimme ist nur bei **Gespräch** zu hören.
 
 | Regler | Wirkung |
 |---|---|
-| **Leitung** | Gespräch · Aufgelegt · Wählton (425 Hz) · Wählen · Freizeichen (1 s Ton, 4 s Pause) · Besetzt. Weg von *Aufgelegt* = Hörer abnehmen (Klacken), hin zu *Aufgelegt* = die Leitung wird aufgelegt (eine echte Aufnahme, die zu jedem Telefon passt: Wählscheibe, Tastentelefon, Handy). Andere Wechsel knacken kurz in der Leitung. |
+| **Leitung** | Gespräch · Aufgelegt · Wählton (425 Hz) · Wählen · Freizeichen (1 s Ton, 4 s Pause) · Besetzt. Weg von *Aufgelegt* = die Leitung geht auf (kurzes, neutrales Klacken), hin zu *Aufgelegt* = die Leitung wird aufgelegt (eine echte Aufnahme). Beides passt zu jedem Telefon: Wählscheibe, Tastentelefon, Handy. Andere Wechsel knacken kurz in der Leitung. |
 | **Wählart** | Wählscheibe (Impulse, typisch für die 80er) oder Tasten (Töne). Gewählt wird, bis man auf Freizeichen umschaltet. **Jedes Wählen ist eine neue, zufällige Nummer**, mit leicht unterschiedlichen Pausen zwischen den Ziffern, wie bei einem Menschen. Wer mehrmals wählen lässt, bekommt nie zweimal dieselbe Tonfolge und muss keine Wähltöne mehr von Hand variieren. Der Zufall beginnt nach dem Laden des Plugins immer gleich, darum klingt ein Export jedes Mal identisch. |
 
 ### Für alle Modi
@@ -109,6 +109,7 @@ gesteuert. Die Stimme ist nur bei **Gespräch** zu hören.
 Die Versionsnummer steht in der Datei `VERSION`, im Plugin-Kopf und im Namen der Release. Sie wird bei jeder
 Änderung hochgezählt.
 
+- **1.8** – Telefon: Abnehmen klingt jetzt neutral (kurzes Klacken in der Leitung) statt nach dem Hörer eines alten Apparats, passend zum Auflegen seit 1.7. [Release-Hinweise](docs/releases/1.8.md).
 - **1.7** – Telefon: neues Auflegegeräusch. Statt eines eingehängten Hörers ist jetzt das Auflegen der Leitung zu hören, passend für jedes Telefon. Radio: neun Senderwechsel-Aufnahmen statt drei, gleich laut, zufällig. Funk: drei Schluss-Squelches beim Walkie-Talkie, zufällig. Anregungen aus dem Beta-Test. [Release-Hinweise](docs/releases/1.7.md).
 - **1.6** – Einheitliche öffentliche Versionsnummer ohne Build-Suffix; Audioverarbeitung und Projektkompatibilität unverändert. [Release-Hinweise](docs/releases/1.6.md).
 - **1.5** – Radio: neuer Schalter „Radio: Ein“ (Klick, dann Stille, kein Rauschen mehr nach dem Abschalten) und drei Senderwechsel-Geräusche, zufällig gewählt, nie zweimal dieselbe hintereinander. Die zwei zusätzlichen Senderwechsel sind aus der vorhandenen Aufnahme abgeleitet (anderes Drehtempo). Anregung aus dem Beta-Test.
