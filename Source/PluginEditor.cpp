@@ -16,7 +16,7 @@ juce::String lineDescription (int line)
     switch (line)
     {
         case rph::kGespraech:   return u8 ("Die Stimme ist zu h\xc3\xb6ren, leise Leitung im Hintergrund.");
-        case rph::kAufgelegt:   return u8 ("Leitung tot, die Stimme ist stumm. Der Wechsel von hier weg \xc3\xb6ffnet die Leitung mit einem kurzen Klacken, der Wechsel hierher legt sie auf. Beides passt zu jedem Telefon.");
+        case rph::kAufgelegt:   return u8 ("Leitung tot, die Stimme ist stumm. Der Wechsel von hier weg \xc3\xb6" "ffnet die Leitung mit einem kurzen Klacken, der Wechsel hierher legt sie auf. Beides passt zu jedem Telefon.");
         case rph::kWaehlton:    return u8 ("H\xc3\xb6rer ist abgenommen: Dauerton (425 Hz), es wurde noch nicht gew\xc3\xa4hlt.");
         case rph::kWaehlen:     return u8 ("Es wird eine Nummer gew\xc3\xa4hlt, bis du auf Freizeichen umschaltest.");
         case rph::kFreizeichen: return u8 ("Es klingelt beim Angerufenen: 1 s Ton, 4 s Pause.");
